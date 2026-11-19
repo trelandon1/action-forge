@@ -212,6 +212,10 @@
       textarea.note-in:focus{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,175,55,.18); }
       textarea.note-in::placeholder{ color:var(--muted2); }
       .hidden{ display:none !important; }
+      .swap-divider{ border:none; border-top:1px dashed rgba(212,175,55,.18); margin:18px 0 14px; }
+      .swap-panel{ display:grid; gap:12px; }
+      .swap-panel label{ display:block; font-size:11.5px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+      .swap-type-desc{ margin:8px 0 0; color:var(--muted); font-size:13px; font-weight:500; line-height:1.5; border:1px solid var(--line-soft); background:rgba(212,175,55,.05); border-radius:10px; padding:10px 12px; }
       footer.note{ margin-top:22px; color:var(--muted2); font-size:12.5px; font-weight:600; text-align:center; letter-spacing:.03em; }
     </style>
   </head>
@@ -230,7 +234,7 @@
       <div class="mode-tabs" role="tablist" aria-label="Prompt mode">
         <button class="mode-tab" id="tab-swap" role="tab" aria-selected="false" data-mode="swap">
           <strong>Swap Prompt</strong>
-          <span>One tap — change the character in the video</span>
+          <span>Character, object &amp; reference-image templates</span>
         </button>
         <button class="mode-tab" id="tab-action" role="tab" aria-selected="true" data-mode="action">
           <strong>Action Prompt</strong>
@@ -249,25 +253,93 @@
       <!-- ============ SWAP MODE ============ -->
       <section id="view-swap" class="hidden" aria-labelledby="tab-swap">
         <div class="card">
-          <h2>Character Swap</h2>
-          <p class="hint">The Apob rule: build the character once, lock it, reuse it everywhere. Set up your tool like this, then paste the line.</p>
+          <h2>Swap Studio</h2>
+          <p class="hint">Three director-grade swap templates — pick the job, describe what's in the video and what replaces it, and Forge writes the exact prompt. Set up your tool like this first:</p>
           <div class="steps">
             <div><i>1</i><span>Attach your source clip as <code>@Video1</code> — it supplies all motion, timing &amp; camera.</span></div>
-            <div><i>2</i><span>Attach your character sheet as <code>@Image1</code> — it supplies the new face, hair, body &amp; outfit.</span></div>
-            <div><i>3</i><span>Paste the swap prompt below. Never type a real person's name — the image is the identity.</span></div>
+            <div><i>2</i><span>For a reference-image swap, attach the new person / product photo as <code>@Image1</code> — it supplies the exact identity.</span></div>
+            <div><i>3</i><span>Paste the forged prompt below. Never type a real person's name — describe them, or let the image be the identity.</span></div>
           </div>
-          <button class="btn-gold" id="swap-basic">Give me the Swap Prompt</button>
-          <div style="height:10px"></div>
-          <button class="btn-ghost" id="swap-lock" style="width:100%">Swap Prompt + Full Lock Version</button>
-          <div style="height:10px"></div>
-          <button class="btn-ghost" id="swap-pro" style="width:100%">Swap Pro — Motion, Camera &amp; Light Lock</button>
+
+          <div class="group">
+            <div class="group-label">Swap Type <span class="val" id="val-swaptype">Character / Person</span></div>
+            <div class="seg grid" id="seg-swaptype" role="group" aria-label="Swap type">
+              <button type="button" data-swaptype="character" aria-pressed="true">Character / Person<span class="sub">Face, outfit, or full body</span></button>
+              <button type="button" data-swaptype="object" aria-pressed="false">Object / Prop<span class="sub">Held, worn, or interacted with</span></button>
+              <button type="button" data-swaptype="reference" aria-pressed="false">Reference Image<span class="sub">Video + @Image1 photo</span></button>
+            </div>
+            <p class="swap-type-desc" id="swap-type-desc">Use this when replacing a person in a video while keeping their exact body movement, camera angle, and lighting intact.</p>
+          </div>
+
+          <!-- Character / Person panel -->
+          <div class="swap-panel" id="panel-character">
+            <div>
+              <label for="in-orig-person">Original person in the video</label>
+              <input class="textin" id="in-orig-person" type="text" maxlength="140" placeholder="e.g. the man in the blue jacket" />
+            </div>
+            <div>
+              <label for="in-new-person">New person / character</label>
+              <input class="textin" id="in-new-person" type="text" maxlength="180" placeholder="e.g. a woman in her late 20s wearing a tailored camel trench coat and silver hoop earrings" />
+            </div>
+            <div>
+              <label>Scene lighting to match</label>
+              <div class="seg" id="seg-lighting" role="group" aria-label="Scene lighting">
+                <button type="button" data-light="warm golden-hour rim lighting" aria-pressed="true">Warm golden-hour rim</button>
+                <button type="button" data-light="cool overcast daylight" aria-pressed="false">Cool overcast daylight</button>
+                <button type="button" data-light="moody night lighting from practical sources" aria-pressed="false">Moody night practicals</button>
+                <button type="button" data-light="hard midday sunlight" aria-pressed="false">Hard midday sun</button>
+                <button type="button" data-light="soft natural window light" aria-pressed="false">Soft window light</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Object / Prop panel -->
+          <div class="swap-panel hidden" id="panel-object">
+            <div>
+              <label for="in-orig-object">Original object in the video</label>
+              <input class="textin" id="in-orig-object" type="text" maxlength="160" placeholder="e.g. the white paper coffee cup in the person's right hand" />
+            </div>
+            <div>
+              <label for="in-new-object">New object</label>
+              <input class="textin" id="in-new-object" type="text" maxlength="180" placeholder="e.g. a sleek matte-black stainless steel insulated tumbler with subtle condensation" />
+            </div>
+            <p class="hint" style="margin:0">Works for anything held, worn, or interacted with — a coffee cup, phone, car, or product.</p>
+          </div>
+
+          <!-- Reference Image panel -->
+          <div class="swap-panel hidden" id="panel-reference">
+            <div>
+              <label for="in-orig-ref">Original subject / object in the video</label>
+              <input class="textin" id="in-orig-ref" type="text" maxlength="160" placeholder="e.g. the man in the blue jacket — or — the white paper coffee cup" />
+            </div>
+            <div>
+              <label>What the reference image shows</label>
+              <div class="seg" id="seg-reftype" role="group" aria-label="Reference image type">
+                <button type="button" data-reftype="person" aria-pressed="true">Person</button>
+                <button type="button" data-reftype="product" aria-pressed="false">Product</button>
+              </div>
+            </div>
+            <p class="hint" style="margin:0">Use this when your tool accepts both a source video and a reference image (<code>@image</code> / <code>@Image1</code> or uploaded asset).</p>
+          </div>
+
+          <div style="height:16px"></div>
+          <button class="btn-gold" id="swap-forge">Forge Swap Prompt</button>
+
           <div style="height:14px"></div>
-          <div class="swap-big empty" id="swap-out">Your swap prompt will appear here.</div>
+          <div class="swap-big empty" id="swap-out">Your swap prompt will appear here. Leave a field blank and Forge uses the example wording for that slot.</div>
           <div class="btn-row">
             <button class="btn-ghost" id="swap-copy" disabled>Copy</button>
             <button class="btn-ghost" id="swap-download" disabled>Download .txt</button>
           </div>
           <div class="toast" id="swap-toast" role="status"></div>
+
+          <hr class="swap-divider" />
+          <div class="group-label">Quick Lines <span class="val">one tap, no fields</span></div>
+          <button class="btn-ghost" id="swap-basic" style="width:100%">Simple Swap Line</button>
+          <div style="height:8px"></div>
+          <button class="btn-ghost" id="swap-lock" style="width:100%">Swap Prompt + Full Lock Version</button>
+          <div style="height:8px"></div>
+          <button class="btn-ghost" id="swap-pro" style="width:100%">Swap Pro — Motion, Camera &amp; Light Lock</button>
         </div>
       </section>
 
@@ -1349,6 +1421,62 @@
         $("swap-copy").disabled = false;
         $("swap-download").disabled = false;
       }
+
+      /* ---- Swap templates (character / object / reference-image) ---- */
+      var swapType = "character";
+      var swapLighting = "warm golden-hour rim lighting";
+      var swapRefType = "person";
+      var SWAP_TYPE_INFO = {
+        character: { label: "Character / Person", desc: "Use this when replacing a person in a video while keeping their exact body movement, camera angle, and lighting intact." },
+        object: { label: "Object / Prop", desc: "Use this when replacing an item a person is holding, wearing, or interacting with — swapping a coffee cup, phone, car, or product." },
+        reference: { label: "Reference Image", desc: "Use this when your video AI tool accepts both a source video and a reference image (@image or uploaded asset)." }
+      };
+      function paintSwapType() {
+        document.querySelectorAll("#seg-swaptype button").forEach(function (b) {
+          b.setAttribute("aria-pressed", String(b.getAttribute("data-swaptype") === swapType));
+        });
+        $("panel-character").classList.toggle("hidden", swapType !== "character");
+        $("panel-object").classList.toggle("hidden", swapType !== "object");
+        $("panel-reference").classList.toggle("hidden", swapType !== "reference");
+        $("val-swaptype").textContent = SWAP_TYPE_INFO[swapType].label;
+        $("swap-type-desc").textContent = SWAP_TYPE_INFO[swapType].desc;
+      }
+      document.querySelectorAll("#seg-swaptype button").forEach(function (b) {
+        b.addEventListener("click", function () { swapType = b.getAttribute("data-swaptype"); paintSwapType(); });
+      });
+      document.querySelectorAll("#seg-lighting button").forEach(function (b) {
+        b.addEventListener("click", function () {
+          swapLighting = b.getAttribute("data-light");
+          document.querySelectorAll("#seg-lighting button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+        });
+      });
+      document.querySelectorAll("#seg-reftype button").forEach(function (b) {
+        b.addEventListener("click", function () {
+          swapRefType = b.getAttribute("data-reftype");
+          document.querySelectorAll("#seg-reftype button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+        });
+      });
+      function fieldOr(id, fallback) { var v = $(id).value.trim(); return v || fallback; }
+      function forgeSwapPrompt() {
+        var text;
+        if (swapType === "character") {
+          var orig = fieldOr("in-orig-person", "the man in the blue jacket");
+          var neu = fieldOr("in-new-person", "a woman in her late 20s wearing a tailored camel trench coat and silver hoop earrings");
+          text = "Replace " + orig + " with " + neu + ".\n\nPreserve the exact body pose, facial expressions, hand gestures, and motion path of the original subject. Match the scene's original " + swapLighting + ", natural shadows on the ground, depth-of-field blur, and film grain. Keep the background, camera movement, and all surrounding objects completely unchanged.";
+        } else if (swapType === "object") {
+          var oOrig = fieldOr("in-orig-object", "the white paper coffee cup in the person's right hand");
+          var oNew = fieldOr("in-new-object", "a sleek matte-black stainless steel insulated tumbler with subtle condensation");
+          text = "Swap " + oOrig + " with " + oNew + ".\n\nMaintain natural hand grip, finger occlusion, weight, and motion tracking throughout every frame. Match specular reflections, ambient occlusion shadows, and motion blur to the rest of the footage. Do not alter the person, clothing, lighting, or background environment.";
+        } else {
+          var rOrig = fieldOr("in-orig-ref", "the original subject in the video");
+          text = "Replace " + rOrig + " with the exact " + swapRefType + " shown in the reference image.\n\nRetain 100% of the original video's choreography, camera tracking, perspective, and timing. Seamlessly adapt the lighting, color grading, cast shadows, and subtle motion blur of the reference subject so it blends naturally into the environment with zero flickering or edge artifacts.";
+        }
+        showSwap(text);
+        toast($("swap-toast"), SWAP_TYPE_INFO[swapType].label + " swap forged — copy it into your tool with @Video1" + (swapType === "reference" ? " + @Image1." : "."));
+      }
+      $("swap-forge").addEventListener("click", forgeSwapPrompt);
+      paintSwapType();
+
       $("swap-basic").addEventListener("click", function () { showSwap(SWAP_BASIC); toast($("swap-toast"), "That's the line — copy it into your tool with your video + character image."); });
       $("swap-lock").addEventListener("click", function () { showSwap(SWAP_LOCK); toast($("swap-toast"), "Full lock version — same swap, everything else in the video protected."); });
       $("swap-pro").addEventListener("click", function () { showSwap(SWAP_PRO); toast($("swap-toast"), "Swap Pro — motion, character & light locked, with the full avoid list."); });
