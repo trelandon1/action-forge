@@ -211,6 +211,30 @@
       textarea.note-in{ width:100%; background:#0d0d10; border:1px solid var(--line-soft); color:var(--ink); border-radius:12px; padding:12px 14px; font-size:14.5px; min-height:64px; resize:vertical; outline:none; font-family:inherit; }
       textarea.note-in:focus{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,175,55,.18); }
       textarea.note-in::placeholder{ color:var(--muted2); }
+      /* ---------- Compact mode ---------- */
+      .compact-box{ margin-top:14px; border:1px solid var(--line-soft); background:rgba(212,175,55,.05); border-radius:12px; padding:13px 14px; }
+      .compact-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+      .compact-top strong{ display:block; font-size:14.5px; font-weight:800; letter-spacing:.02em; }
+      .compact-top span{ display:block; font-size:12.5px; color:var(--muted); font-weight:600; margin-top:2px; line-height:1.4; }
+      .compact-toggle{ display:flex; gap:6px; flex:none; }
+      .compact-toggle button{
+        min-width:86px; min-height:40px; border-radius:999px; padding:6px 14px;
+        border:1px solid var(--line-soft); background:#101013; color:var(--muted); font-weight:800; font-size:13.5px;
+      }
+      .compact-toggle button[aria-pressed="true"]{
+        background:linear-gradient(180deg, #f1d27a, #d4af37 60%, #b8912a); border-color:#f1d27a; color:#191204;
+      }
+      .compact-meter{ margin-top:12px; }
+      .compact-count{ font-size:12.5px; font-weight:700; color:var(--muted); letter-spacing:.02em; line-height:1.45; }
+      .compact-count b{ color:var(--gold-hi); }
+      .compact-count.over b{ color:var(--danger); }
+      .compact-bar{ height:8px; margin-top:7px; background:#0d0d10; border:1px solid var(--line-soft); border-radius:999px; overflow:hidden; }
+      .compact-bar i{ display:block; height:100%; width:0%; background:linear-gradient(90deg, #b8912a, #f1d27a); transition:width .2s ease; }
+      .compact-bar.over i{ background:linear-gradient(90deg, #a33b28, var(--danger)); }
+      .compact-help{ margin-top:11px; font-size:13px; color:var(--muted); font-weight:500; line-height:1.55; }
+      .compact-help b{ color:var(--ink); }
+      .compact-help p{ margin:0 0 7px; }
+      .compact-help p:last-child{ margin-bottom:0; }
       .hidden{ display:none !important; }
       .swap-divider{ border:none; border-top:1px dashed rgba(212,175,55,.18); margin:18px 0 14px; }
       .swap-panel{ display:grid; gap:12px; }
@@ -483,6 +507,29 @@
               <h2 style="margin:0">Your Prompt</h2>
               <div class="status-line" id="status-line">Nothing forged yet</div>
             </div>
+
+            <!-- Compact mode -->
+            <div class="compact-box" id="compact-box">
+              <div class="compact-top">
+                <div>
+                  <strong>Compact Mode</strong>
+                  <span>Short version — forges automatically when you turn it on.</span>
+                </div>
+                <div class="compact-toggle" role="group" aria-label="Prompt length">
+                  <button type="button" id="compact-full" aria-pressed="true">Full</button>
+                  <button type="button" id="compact-on" aria-pressed="false">Compact</button>
+                </div>
+              </div>
+              <div class="compact-meter" aria-live="polite">
+                <div class="compact-count" id="compact-count"><b>0</b> / 2,500 characters · <b>2,500</b> left for your @ tags</div>
+                <div class="compact-bar" id="compact-bar"><i id="compact-bar-fill"></i></div>
+              </div>
+              <div class="compact-help" id="compact-instructions">
+                <p><b>What Compact does:</b> it rewrites the same prompt in short form so it fits under Kling's 2,500-character cap — with room left for your <b>@Image1</b> person tag and <b>@Image2 / [Vehicle]</b> tag. It keeps the character lock, the vehicle lock (when Vehicle is on), the environment, every beat as one short line (time, action, object), one camera move, speed, aspect, and the negative list. Each lock is stated <b>once</b>, camera / motion / physics / visual / audio are merged into <b>one short line</b>, and the long “highest priority” and consistency paragraphs are dropped — they only repeat what the locks already say.</p>
+                <p><b>When to use it:</b> use Compact when Kling or Seedance says you've reached the prompt limit, or before pasting whenever you still need to add @ tags in the tool. Check the count above first — the number “left for your @ tags” is the room you have. Use <b>Full</b> instead when your tool accepts longer prompts (for example Kling 4.0's higher cap) and you want every director detail spelled out.</p>
+              </div>
+            </div>
+
             <textarea class="out" id="out" readonly placeholder="Set your choices on the left, then hit FORGE MY PROMPT. Your polished, fully timed prompt lands here — copy it straight into your tool."></textarea>
             <div class="meta-line" id="out-meta"></div>
             <div class="check-strip" id="check-strip" aria-label="What this prompt includes"></div>
@@ -961,7 +1008,8 @@
         lock: "ultra",
         ending: "impact",
         addons: { person: false, place: false, thing: false, vehicle: false, environment: true },
-        media: { music: false, dialogue: false, subtitles: false, text: false, logos: false }
+        media: { music: false, dialogue: false, subtitles: false, text: false, logos: false },
+        compact: false
       };
 
       var forged = null; /* { text, totalSeconds, extensions } */
@@ -1157,6 +1205,7 @@
         if (state.media.subtitles) chips.push("Subtitles");
         if (state.media.text) chips.push("On-screen text");
         if (state.media.logos) chips.push("Logo");
+        if (state.compact) chips.push("Compact");
         return chips;
       }
 
@@ -1218,6 +1267,201 @@
         if (state.addons.vehicle) t.push("[Vehicle]");
         t.push(state.addons.environment ? "[ENV]" : "[No]");
         return t;
+      }
+
+      /* ================= COMPACT MODE ================= */
+      var KLING_CAP = 2500;
+
+      var COMPACT_PHYSICS = {
+        none: "believable human limits",
+        speed: "superhuman speed, grounded weight and real contact",
+        strength: "superhuman strength, real impact and environmental damage",
+        agility: "enhanced agility, honest takeoff / rotation / landing",
+        reflexes: "lightning reflexes, last-inch evasion and instant counters",
+        gravity: "selective directional gravity, real physics — direction only changed, power fully invisible"
+      };
+
+      /* One short line per beat: action + object. Time range is added by the forge. */
+      var COMPACT_BEATS = {
+        wingchun: [
+          function (c) { return "Wing Chun explosion — pak sao, chain punches, arm trap + knee, leg sweep onto " + c.surf; },
+          function (c) { return c.veh ? "Environmental combat — arm-drag onto [Vehicle] hood, spin attacker into another, vault the hood" : "Environmental combat — arm-drag into the " + c.prop + ", spin attacker into another, vault the " + c.prop; },
+          function (c) { return "Wall run — run up " + (c.veh ? "the [Vehicle]" : "the " + c.prop) + ", flying spinning kick, low sweep, turning elbow"; },
+          function (c) { return "Close throws — double arm-drag throws opposite ways, shoulder throw through the " + c.prop2; },
+          function (c) { return "Final combo — backfist, spinning elbow, low sweep, jumping side kick, flying knee"; }
+        ],
+        muaythai: [
+          function (c) { return "Clinch & elbows — collar clinch, knee to body, spinning elbow, downward elbow onto " + c.surf; },
+          function (c) { return "Teep & leg kick — teep into the " + c.prop + ", heavy leg kick, jumping knee"; },
+          function (c) { return "Knee storm — clinch knees, spinning elbow, flying knee off " + (c.veh ? "the [Vehicle] hood" : "the " + c.prop); },
+          function (c) { return "Sweep & dump — clinch sweep slam onto " + c.surf + ", catch kick, dump through the " + c.prop2; },
+          function (c) { return "Iron finish — teep, spinning elbow, leg sweep, roundhouse kick, flying knee"; }
+        ],
+        mma: [
+          function (c) { return "Pressure takedown — shoot under punch, double-leg slam onto " + c.surf + ", collar drag face-first"; },
+          function (c) { return "Arm-drag to hip throw — arm-drag into the " + c.prop + ", full hip throw"; },
+          function (c) { return "Environmental takedowns — blast double into " + (c.veh ? "the [Vehicle]" : "the " + c.prop2) + ", trip over fallen body, snap-down throw"; },
+          function (c) { return "Double throw — double arm-drag throws opposite ways, shoulder throw through the " + c.prop2; },
+          function (c) { return "Final slam — trip, arm-drag, low sweep, lifting slam"; }
+        ],
+        capoeira: [
+          function (c) { return "Ginga opening — negativa leg sweep, roll up, spinning armada kick"; },
+          function (c) { return "Spinning flow — cartwheel over punch, martelo kick into the " + c.prop + ", meia-lua kick"; },
+          function (c) { return "Cartwheel counters — handstand spin off " + (c.veh ? "the [Vehicle] hood" : "the " + c.prop) + ", heel strike + sweep, rasteira sweep"; },
+          function (c) { return "Acrobatic sweeps — palm-spin double sweep, macaco backflip, sweep through the " + c.prop2; },
+          function (c) { return "Spinning finish — armada, cartwheel evasion, rasteira, jumping meia-lua, flying spinning kick"; }
+        ],
+        kravmaga: [
+          function (c) { return "Instant counter — palm strike + knee, shove attacker into the next, elbow burst onto " + c.surf; },
+          function (c) { return "Environmental weapons — block + trap, drive attacker into the " + c.prop + ", improvised shield from the " + c.prop2; },
+          function (c) { return "Simultaneous defense — hammer fist + block, low leg kick, vault " + (c.veh ? "the [Vehicle] hood" : "the " + c.prop) + ", spinning backfist"; },
+          function (c) { return "Brutal takedowns — rip both grips, arm-wrench takedowns opposite ways, hurl attacker through the " + c.prop2; },
+          function (c) { return "No second chances — hammer fist, spinning elbow, leg stomp sweep, jumping knee"; }
+        ]
+      };
+
+      var COMPACT_EXT_BEATS = [
+        function (c) { return "Escalation — more attackers pour in, close strikes, spinning elbow, driving takedown onto " + c.surf; },
+        function (c) { return "Second wave — explode off the " + c.prop + ", flying strike, leg sweep, shoulder throw through the " + c.prop2; },
+        function (c) { return "No retreat — drop center, break both attacks in one rotation, rapid chain of strikes"; },
+        function (c) { return "Pursuit — vault " + (c.veh ? "the [Vehicle]" : "the " + c.prop) + ", close distance, spinning strike into the others"; },
+        function (c) { return "Final stand — fastest combo: backfist, elbow, sweep, leaping finishing strike"; }
+      ];
+
+      var COMPACT_GRAVITY_EXT_BEATS = [
+        function () { return "Second surge — fresh wave falls straight up at once; he walks through the falling debris"; },
+        function () { return "Human weather — orbiting bodies released in every direction, slamming into walls and ground"; },
+        function () { return "Whirlpool — new attackers whirl in a spiral orbit around him; he keeps his exact walking pace"; },
+        function () { return "Second snap — gravity snaps back for all at once; hundreds drop together, dust blast; he walks out mid-stride, open ending"; }
+      ];
+
+      function compactNegatives() {
+        var neg = ["no slow motion", "no speed ramping", "no teleportation", "no duplicated / morphing fighters", "no identity drift", "no face changes", "no outfit changes", "no lighting changes", "no flicker", "no warping", "no distorted / extra limbs or fingers", "no floating bodies", "no cartoon physics", "no cuts inside a beat"];
+        if (!state.media.text) neg.push("no text");
+        if (!state.media.subtitles) { neg.push("no subtitles"); neg.push("no captions"); }
+        if (!state.media.logos) { neg.push("no logos"); neg.push("no watermarks"); }
+        neg.push("no UI");
+        if (!state.media.music) neg.push("no music");
+        if (!state.media.dialogue) { neg.push("no dialogue"); neg.push("no narration"); }
+        neg.push("no blood"); neg.push("no gore");
+        if (state.power === "gravity") neg.push("no beams / glow / aura / particles / shockwaves — gravity stays invisible");
+        return neg.join(", ");
+      }
+
+      function compactMediaShort(title) {
+        var bits = [];
+        if (state.media.music) bits.push("music: cinematic score under impacts");
+        if (state.media.dialogue) {
+          var dlg = $("in-dialogue").value.trim();
+          bits.push(dlg ? "dialogue (protagonist, climax only): \"" + dlg + "\"" : "dialogue: one short protagonist line at climax only");
+        }
+        if (state.media.subtitles) bits.push("subtitles timed to dialogue");
+        if (state.media.text) bits.push("title text \"" + title + "\" as opening card only");
+        if (state.media.logos) bits.push("one small corner logo, never over fighters");
+        return bits;
+      }
+
+      function forgeCompactPrompt() {
+        var style = STYLES[state.style];
+        var env = ENVIRONMENTS[state.env];
+        var dur = state.duration;
+        var beatLen = dur / 5;
+        var titleIn = $("in-title").value.trim();
+        var title = (titleIn || style.title).toUpperCase();
+        var tokens = addonTokens();
+        var lines = [];
+        lines.push(state.tool.toUpperCase() + " — " + title + " | 1 VS " + state.opponents + " [COMPACT]");
+        lines.push("Format: " + dur + "s | " + state.aspect + " | " + state.speed + "x speed | " + (state.take === "continuous" ? "one continuous take, no cuts" : "hard cuts on beats only") + (state.camera === "bullet" ? " | one bullet-time arc at climax only" : " | no slow motion"));
+        var outfitNote = state.outfit === "regular" ? "" : " Outfit: " + OUTFITS[state.outfit].name + " — exactly as described for IMAGE 1, intact all clip.";
+        lines.push("Character lock: IMAGE 1 — exact face, hairstyle, outfit and body from the reference in every frame; no drift, morph or age shift." + outfitNote + (state.lock === "ultra" ? " Light and colour are locked with the face." : ""));
+        if (state.addons.vehicle) lines.push("Vehicle lock: [Vehicle] — same referenced vehicle in the scene in every frame, used in the beats as written; never changes or duplicates.");
+        lines.push("Add-ons: " + tokens.join(" ") + (state.addons.person ? " — [Person] stays consistent and out of the fight unless reached." : "") + (state.addons.place ? " — [Place] is the exact location, layout unchanged." : "") + (state.addons.thing ? " — [Thing] stays present, never duplicated or removed." : ""));
+        lines.push("Env: " + cap(env.setting) + ". " + state.daynight + ", " + (state.weather === "Rain" ? "rain throughout — wet surfaces, splashes, soaked clothes" : "dry — dust from footwork") + ". " + state.opponents + " distinct opponents; each stays down once beaten.");
+        lines.push("Beats:");
+        var beats = COMPACT_BEATS[state.style] || COMPACT_BEATS.wingchun;
+        for (var i = 0; i < 5; i++) {
+          var start = i * beatLen, end = start + beatLen;
+          lines.push(fmtT(start) + "–" + fmtT(end) + "s: " + beats[i](makeCtx(i)) + ".");
+        }
+        lines.push("Ending: " + (state.ending === "open" ? "open — ends mid-action, no pose or freeze, ready to extend." : "cut on impact at the final contact — no aftermath, no pose."));
+        var noteIn = $("in-note").value.trim();
+        if (noteIn) lines.push("Director's note: " + noteIn);
+        var mediaBits = compactMediaShort(title);
+        lines.push("Camera/motion/physics/visual/audio: " + CAMERAS[state.camera].name + " only — one dominant move, no second move; " + style.name + " motion with visible initiation, contact, reaction and recovery; " + (COMPACT_PHYSICS[state.power] || COMPACT_PHYSICS.none) + "; photoreal live-action, " + (state.daynight === "Night" ? "moody night light" : "hard daylight") + ", real skin / cloth physics; impact sounds and ambience — " + env.ambience + (mediaBits.length ? "; " + mediaBits.join("; ") : "") + ".");
+        lines.push("Negative: " + compactNegatives() + ".");
+        return lines.join("\n");
+      }
+
+      function forgeGravityCompactPrompt() {
+        var lines = [];
+        lines.push(state.tool.toUpperCase() + " — MAIN CHARACTER | SELECTIVE DIRECTIONAL GRAVITY [COMPACT]");
+        lines.push("Format: 10s | 16:9 | 3x speed | one continuous take, no cuts, no slow motion");
+        lines.push("Character lock: IMAGE 1 Main Character — exact face, hairstyle, outfit and body from the reference in every frame; calm relaxed walk for the whole clip, no stance, gestures, effort or victory pose; ends mid-stride.");
+        lines.push("Power: selective directional gravity only — selected attackers fall the wrong way with real acceleration, weight and collisions; unselected people, objects, clothing and hair obey normal gravity; Main Character never affected. No visible effect of any kind.");
+        lines.push("Env: crowded city street, attackers charging from every side — dozens building to hundreds.");
+        lines.push("Beats:");
+        lines.push("0–1s: First fall — nearest attacker falls sideways at full speed into the wall; no visible cause; he keeps walking.");
+        lines.push("1–2.5s: Sideways wave — 40–60 attackers fall sideways at once, crashing into walls and each other.");
+        lines.push("2.5–4s: Dominoes — fresh wave falls forward face-first in sequence down the street.");
+        lines.push("4–5.5s: Falling up — nearest group falls straight up into the sky; hats and loose objects stay grounded.");
+        lines.push("5.5–7s: Orbit — airborne attackers swing into a slow ring orbiting him as he walks, none touching him.");
+        lines.push("7–8s: Every direction — dozens fall left, right, forward, back and up at the same moment.");
+        lines.push("8–9s: Diagonal slide — whole remaining crowd slides diagonally as one mass, piling against the far wall.");
+        lines.push("9–10s: Snap back — normal gravity returns for all at once; hundreds drop together, dust blast; he walks out mid-stride, open ending.");
+        lines.push("Camera/motion/physics/visual/audio: backward-tracking follow only — one dominant move, one take, subtle handheld; every fall obeys real gravity with direction only changed; photoreal live-action, detailed panic vs his calm face; crowd panic, body impacts, slide scrape, low hum, one final mass slam; no music, no dialogue.");
+        lines.push("Negative: no beams, no blasts, no glowing hands / eyes, no aura, no particles, no shockwaves, no distortion, no gestures, no slow motion, no cuts, no teleport / duplicate / morph, no face or outfit changes, no floating or weightless drift, no cartoon physics, no victory pose, no text, no subtitles, no logos, no watermarks, no music, no blood, no gore.");
+        return lines.join("\n");
+      }
+
+      function updateCompactMeter(len) {
+        var count = $("compact-count");
+        var bar = $("compact-bar");
+        var fill = $("compact-bar-fill");
+        if (!count || !bar || !fill) return;
+        var left = KLING_CAP - len;
+        var pct = Math.min(100, Math.round((len / KLING_CAP) * 1000) / 10);
+        fill.style.width = pct + "%";
+        bar.classList.toggle("over", left < 0);
+        count.classList.toggle("over", left < 0);
+        if (!len) {
+          count.innerHTML = "<b>0</b> / 2,500 characters · <b>2,500</b> left for your @ tags";
+        } else if (left >= 0) {
+          count.innerHTML = "<b>" + len.toLocaleString() + "</b> / 2,500 characters · <b>" + left.toLocaleString() + "</b> left for your @ tags";
+        } else {
+          count.innerHTML = "<b>" + len.toLocaleString() + "</b> / 2,500 characters · <b>" + Math.abs(left).toLocaleString() + " over</b> the Kling cap — trim or split before pasting";
+        }
+      }
+
+      function paintCompactToggle() {
+        $("compact-full").setAttribute("aria-pressed", String(!state.compact));
+        $("compact-on").setAttribute("aria-pressed", String(state.compact));
+      }
+
+      function forgeByKind(kind, compact) {
+        if (kind === "gravity") return compact ? forgeGravityCompactPrompt() : mainCharacterPrompt();
+        return compact ? forgeCompactPrompt() : forgePrompt();
+      }
+
+      function applyCompact(on, silent) {
+        var changed = state.compact !== on;
+        state.compact = on;
+        paintCompactToggle();
+        if (!on && !forged) { updateCompactMeter(0); return; }
+        if (!changed && !forged && !on) return;
+        /* Forges the short version automatically — no extra tap on Forge needed. */
+        var kind = forged ? forged.kind : "standard";
+        var text = forgeByKind(kind, on);
+        var total = forged ? forged.total : state.duration;
+        var beatLen = forged ? forged.beatLen : state.duration / 5;
+        var ext = forged ? forged.extensions : 0;
+        /* Re-forging from settings resets extensions, exactly like Forge does. */
+        forged = { text: text, total: kind === "gravity" ? 10 : state.duration, extensions: 0, beatLen: kind === "gravity" ? 2 : state.duration / 5, kind: kind, compact: on };
+        if (kind === "gravity") {
+          setOutput(text, "Main Character preset — <b>10s</b> · " + state.tool + " · 16:9" + (on ? " · <b>Compact</b>" : ""));
+        } else {
+          setOutput(text, (on ? "Compact forged" : "Forged") + " — <b>" + forged.total + "s</b> · " + state.tool + " · " + state.aspect);
+        }
+        if (!silent) toast($("toast"), on ? "Compact forged — check the count for room left for your @ tags." : "Full version restored.");
       }
 
       function forgePrompt() {
@@ -1357,10 +1601,15 @@
         $("btn-copy-neg").disabled = !text;
         var extendHint = $("extend-locked-hint");
         if (extendHint) extendHint.classList.toggle("hidden", !!text);
+        updateCompactMeter(text ? text.length : 0);
         if (text) {
           var words = text.split(/\s+/).filter(Boolean).length;
           $("out-meta").innerHTML = "<b>" + words.toLocaleString() + "</b> words · <b>" + text.length.toLocaleString() + "</b> characters · ready for " + state.tool;
-          var checks = ["Timed beats", "Character lock", "One dominant camera move", "Consistency rules", "Negative / avoid list"];
+          var isCompact = !!(forged && forged.compact);
+          var checks = isCompact
+            ? ["Timed beats — short form", "Character lock ×1", "One dominant camera move", "Compact — under Kling cap check above", "Negative / avoid list"]
+            : ["Timed beats", "Character lock", "One dominant camera move", "Consistency rules", "Negative / avoid list"];
+          if (isCompact && state.addons.vehicle) checks.splice(2, 0, "Vehicle lock ×1");
           if (state.media.music) checks.push("Music");
           if (state.media.dialogue) checks.push("Dialogue line");
           if (state.media.subtitles) checks.push("Subtitles");
@@ -1374,11 +1623,14 @@
         }
       }
 
+      $("compact-full").addEventListener("click", function () { applyCompact(false); });
+      $("compact-on").addEventListener("click", function () { applyCompact(true); });
+
       $("btn-generate").addEventListener("click", function () {
-        var text = forgePrompt();
-        forged = { text: text, total: state.duration, extensions: 0, beatLen: state.duration / 5, kind: "standard" };
-        setOutput(text, "Forged — <b>" + forged.total + "s</b> · " + state.tool + " · " + state.aspect);
-        toast($("toast"), "Forged. Copy it into " + state.tool + ", or extend it below.");
+        var text = state.compact ? forgeCompactPrompt() : forgePrompt();
+        forged = { text: text, total: state.duration, extensions: 0, beatLen: state.duration / 5, kind: "standard", compact: state.compact };
+        setOutput(text, (state.compact ? "Compact forged" : "Forged") + " — <b>" + forged.total + "s</b> · " + state.tool + " · " + state.aspect);
+        toast($("toast"), state.compact ? "Compact forged — check the count for room left for your @ tags." : "Forged. Copy it into " + state.tool + ", or extend it below.");
       });
 
       $("btn-main").addEventListener("click", function () {
@@ -1410,9 +1662,9 @@
         $("in-note").value = "";
         $("in-dialogue").value = "";
         refresh();
-        var text = mainCharacterPrompt();
-        forged = { text: text, total: 10, extensions: 0, beatLen: 2, kind: "gravity" };
-        setOutput(text, "Main Character preset loaded — <b>10s</b> · " + state.tool + " · 16:9 · 3x speed · one take");
+        var text = state.compact ? forgeGravityCompactPrompt() : mainCharacterPrompt();
+        forged = { text: text, total: 10, extensions: 0, beatLen: 2, kind: "gravity", compact: state.compact };
+        setOutput(text, "Main Character preset loaded — <b>10s</b> · " + state.tool + " · 16:9 · 3x speed · one take" + (state.compact ? " · <b>Compact</b>" : ""));
         toast($("toast"), "Main Character loaded. Copy it into " + state.tool + " with your reference photo as IMAGE 1 — or Extend to keep him walking.");
         if (window.innerWidth < 960) { $("out").scrollIntoView({ behavior: "smooth", block: "start" }); }
       });
@@ -1447,10 +1699,10 @@
         $("in-note").value = "";
         $("in-dialogue").value = "";
         refresh();
-        var text = forgePrompt();
-        forged = { text: text, total: state.duration, extensions: 0, beatLen: state.duration / 5, kind: "standard" };
-        setOutput(text, "Dragon preset forged — <b>10s</b> · Seedance · 16:9 · Wing Chun");
-        toast($("toast"), "The Dragon is forged — the full template, upgraded with the lock, camera rule, and avoid list.");
+        var text = state.compact ? forgeCompactPrompt() : forgePrompt();
+        forged = { text: text, total: state.duration, extensions: 0, beatLen: state.duration / 5, kind: "standard", compact: state.compact };
+        setOutput(text, (state.compact ? "Dragon preset — Compact forged" : "Dragon preset forged") + " — <b>10s</b> · Seedance · 16:9 · Wing Chun");
+        toast($("toast"), state.compact ? "The Dragon — compact version forged. Check the count for @ tag room." : "The Dragon is forged — the full template, upgraded with the lock, camera rule, and avoid list.");
         if (window.innerWidth < 960) { $("out").scrollIntoView({ behavior: "smooth", block: "start" }); }
       });
 
@@ -1461,30 +1713,41 @@
         var startTotal = forged.total;
         var newTotal = startTotal + addSecs;
         var extIdx = forged.extensions;
+        var isCompact = !!forged.compact;
 
         var block = [];
         block.push("");
         block.push("——————————————————————————");
-        block.push("EXTENSION " + (extIdx + 1) + " — THE ACTION CONTINUES (" + fmtT(startTotal) + "–" + fmtT(newTotal) + "s)");
-        block.push("");
-        block.push("Seamless continuation from the exact final frame of the previous segment — same protagonist, same face, same outfit, same location, same lighting. No reset, no pause, no new introduction.");
-        block.push("LOCK CARRIES OVER: the character lock, consistency rules, and negative prompt from the original prompt apply in full to this extension — same face, same outfit, same light, zero drift.");
-        block.push(forged.kind === "gravity"
-          ? "CAMERA CONTINUES: the same single backward-tracking follow, still one continuous take — the dominant move never changes."
-          : "CAMERA CONTINUES: the dominant move stays " + CAMERAS[state.camera].name + " — do not switch camera language mid-story.");
-        block.push("");
-        var beatSet = forged.kind === "gravity" ? GRAVITY_EXT_BEATS : EXT_BEATS;
-        for (var j = 0; j < addBeats; j++) {
-          var s = startTotal + j * forged.beatLen, e = s + forged.beatLen;
-          var beat = beatSet[(extIdx * addBeats + j) % beatSet.length](makeCtx(j % 5));
-          block.push(fmtT(s) + "–" + fmtT(e) + "s | " + beat[0]);
+        if (isCompact) {
+          block.push("Extension " + (extIdx + 1) + " — continues " + fmtT(startTotal) + "–" + fmtT(newTotal) + "s: seamless from the exact final frame, same lock / camera / negative above, no reset.");
+          var cBeatSet = forged.kind === "gravity" ? COMPACT_GRAVITY_EXT_BEATS : COMPACT_EXT_BEATS;
+          for (var cj = 0; cj < addBeats; cj++) {
+            var cs = startTotal + cj * forged.beatLen, ce = cs + forged.beatLen;
+            block.push(fmtT(cs) + "–" + fmtT(ce) + "s: " + cBeatSet[(extIdx * addBeats + cj) % cBeatSet.length](makeCtx(cj % 5)) + ".");
+          }
+        } else {
+          block.push("EXTENSION " + (extIdx + 1) + " — THE ACTION CONTINUES (" + fmtT(startTotal) + "–" + fmtT(newTotal) + "s)");
           block.push("");
-          block.push(beat[1]);
+          block.push("Seamless continuation from the exact final frame of the previous segment — same protagonist, same face, same outfit, same location, same lighting. No reset, no pause, no new introduction.");
+          block.push("LOCK CARRIES OVER: the character lock, consistency rules, and negative prompt from the original prompt apply in full to this extension — same face, same outfit, same light, zero drift.");
+          block.push(forged.kind === "gravity"
+            ? "CAMERA CONTINUES: the same single backward-tracking follow, still one continuous take — the dominant move never changes."
+            : "CAMERA CONTINUES: the dominant move stays " + CAMERAS[state.camera].name + " — do not switch camera language mid-story.");
           block.push("");
+          var beatSet = forged.kind === "gravity" ? GRAVITY_EXT_BEATS : EXT_BEATS;
+          for (var j = 0; j < addBeats; j++) {
+            var s = startTotal + j * forged.beatLen, e = s + forged.beatLen;
+            var beat = beatSet[(extIdx * addBeats + j) % beatSet.length](makeCtx(j % 5));
+            block.push(fmtT(s) + "–" + fmtT(e) + "s | " + beat[0]);
+            block.push("");
+            block.push(beat[1]);
+            block.push("");
+          }
         }
 
         var text = forged.text;
         text = text.replace(forged.total + " seconds", newTotal + " seconds");
+        if (isCompact) text = text.replace("Format: " + forged.total + "s", "Format: " + newTotal + "s");
         if (extIdx === 0 && forged.kind === "gravity") text = text.replace("DIRECTIONAL GRAVITY", "DIRECTIONAL GRAVITY (EXTENDED)");
         else if (extIdx === 0) text = text.replace("| 1 VS ", "(EXTENDED) | 1 VS ");
         text = text + "\n" + block.join("\n").replace(/\n+$/, "") + "\n";
@@ -1507,6 +1770,7 @@
       $("btn-copy-neg").addEventListener("click", function () {
         if (!forged) return;
         var idx = forged.text.indexOf("NEGATIVE PROMPT");
+        if (idx < 0) idx = forged.text.indexOf("Negative:");
         var neg = idx >= 0 ? forged.text.slice(idx) : forged.text;
         copyText(neg, $("toast"), "Negative / avoid list copied — paste it into " + state.tool + "'s negative field.");
       });
@@ -1601,6 +1865,8 @@
         });
       });
 
+      paintCompactToggle();
+      updateCompactMeter(0);
       refresh();
     </script>
   </body>
