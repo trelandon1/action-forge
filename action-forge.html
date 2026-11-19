@@ -193,11 +193,11 @@
       }
       .swap-big.empty{ color:var(--muted2); font-family:"Manrope", sans-serif; font-size:14px; font-weight:600; }
       .card.preset{ border-color:var(--gold); background:linear-gradient(180deg, rgba(212,175,55,.10), var(--panel)); }
-      .workflow{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:0 0 18px; }
-      @media (max-width:640px){ .workflow{ grid-template-columns:1fr 1fr; } }
-      .workflow div{ border:1px solid var(--line-soft); background:var(--panel); border-radius:12px; padding:10px 12px; }
-      .workflow b{ display:block; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold-hi); margin-bottom:3px; }
-      .workflow span{ font-size:12.5px; color:var(--muted); font-weight:600; line-height:1.35; display:block; }
+      .workflow{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px 24px; margin:2px 0 22px; padding:0 2px; cursor:default; }
+      @media (max-width:640px){ .workflow{ grid-template-columns:1fr 1fr; gap:14px 20px; } }
+      .workflow div{ border:none; background:transparent; border-radius:0; padding:0; cursor:default; }
+      .workflow b{ display:block; font-size:12.5px; letter-spacing:.02em; text-transform:none; color:var(--ink); font-weight:700; margin-bottom:3px; }
+      .workflow span{ font-size:12.5px; color:var(--muted); font-weight:500; line-height:1.45; display:block; }
       .steps{ display:grid; gap:8px; margin:0 0 14px; }
       .steps div{ display:flex; gap:10px; align-items:flex-start; background:#0d0d10; border:1px solid var(--line-soft); border-radius:10px; padding:10px 12px; font-size:13.5px; font-weight:600; color:var(--ink); line-height:1.45; }
       .steps i{ font-style:normal; flex:none; width:22px; height:22px; border-radius:50%; background:linear-gradient(180deg,#f1d27a,#b8912a); color:#191204; font-weight:800; font-size:12.5px; display:flex; align-items:center; justify-content:center; margin-top:1px; }
@@ -244,7 +244,7 @@
 
       <!-- Workflow strip -->
       <div class="workflow" aria-label="How Action Forge works">
-        <div><b>1 · Lock</b><span>Attach your character once — the lock holds face, outfit &amp; light in every frame.</span></div>
+        <div><b>1 · Lock</b><span>Add your character photo as IMAGE 1 in your video tool — the lock in your prompt holds face, outfit &amp; light in every frame.</span></div>
         <div><b>2 · Direct</b><span>Pick tool, camera move, speed, scene, style &amp; power.</span></div>
         <div><b>3 · Forge</b><span>Get a timed, director-grade prompt with camera, physics &amp; avoid rules.</span></div>
         <div><b>4 · Extend</b><span>Continue from the exact final frame — no reset, no drift.</span></div>
@@ -482,8 +482,9 @@
               <button class="btn-ghost" id="btn-copy-neg" disabled>Copy Negative Only</button>
             </div>
             <div class="btn-row">
-              <button class="btn-ghost" id="btn-extend" disabled>＋ Extend — Continue the Action</button>
+              <button class="btn-ghost" id="btn-extend" disabled aria-describedby="extend-locked-hint">＋ Extend — Continue the Action</button>
             </div>
+            <p class="hint" id="extend-locked-hint" style="margin:8px 0 0; color:var(--gold-hi); font-weight:700">Extend stays greyed out until you forge a prompt — hit Forge My Prompt or load a preset first, and it unlocks.</p>
             <p class="hint" style="margin-top:10px">Extend picks up from the exact final frame of your last beat and adds the next timed round — same fighter, same outfit, same scene, no reset. Extend as many times as you need.</p>
             <div class="toast" id="toast" role="status"></div>
           </div>
@@ -1270,6 +1271,8 @@
         $("btn-download").disabled = !text;
         $("btn-extend").disabled = !text;
         $("btn-copy-neg").disabled = !text;
+        var extendHint = $("extend-locked-hint");
+        if (extendHint) extendHint.classList.toggle("hidden", !!text);
         if (text) {
           var words = text.split(/\s+/).filter(Boolean).length;
           $("out-meta").innerHTML = "<b>" + words.toLocaleString() + "</b> words · <b>" + text.length.toLocaleString() + "</b> characters · ready for " + state.tool;
