@@ -401,6 +401,18 @@
               <div id="addons"></div>
             </div>
 
+            <!-- Sound & screen -->
+            <div class="card">
+              <h2>Sound &amp; Screen</h2>
+              <p class="hint">Your call on what makes it into the finished clip. <b>Yes</b> writes it into the prompt; <b>No</b> keeps it out — and adds it to the avoid list so the tool doesn't sneak it in.</p>
+              <div id="media"></div>
+              <div class="group hidden" id="dialogue-wrap">
+                <div class="group-label">Dialogue Line <span class="val">one short sentence</span></div>
+                <input class="textin" id="in-dialogue" type="text" maxlength="90" placeholder="e.g. You picked the wrong street." />
+                <p class="hint" style="margin:8px 0 0">The one line your fighter speaks, at the climax. Leave it blank and Forge just calls for one short line there.</p>
+              </div>
+            </div>
+
             <!-- Scene -->
             <div class="card">
               <h2>The Scene</h2>
@@ -948,7 +960,8 @@
         take: "continuous",
         lock: "ultra",
         ending: "impact",
-        addons: { person: false, place: false, thing: false, vehicle: false, environment: true }
+        addons: { person: false, place: false, thing: false, vehicle: false, environment: true },
+        media: { music: false, dialogue: false, subtitles: false, text: false, logos: false }
       };
 
       var forged = null; /* { text, totalSeconds, extensions } */
@@ -1081,6 +1094,46 @@
         });
       }
 
+      /* Sound & screen Yes/No rows */
+      var MEDIA = [
+        { key: "music", name: "Music" },
+        { key: "dialogue", name: "Dialogue", sub: "one short sentence" },
+        { key: "subtitles", name: "Subtitles" },
+        { key: "text", name: "Text", sub: "on-screen title" },
+        { key: "logos", name: "Logos", sub: "corner watermark" }
+      ];
+      var mediaHost = $("media");
+      MEDIA.forEach(function (m) {
+        var row = document.createElement("div");
+        row.className = "addon";
+        row.innerHTML =
+          '<div class="who"><strong>' + m.name + (m.sub ? ' <span style="color:var(--muted2); font-size:12px; font-weight:700">· ' + m.sub + "</span>" : "") + '</strong><code data-mcode="' + m.key + '"></code></div>' +
+          '<div class="yn" role="group" aria-label="' + m.name + ' yes or no">' +
+          '<button type="button" data-mk="' + m.key + '" data-v="yes">Yes</button>' +
+          '<button type="button" data-mk="' + m.key + '" data-v="no">No</button></div>';
+        mediaHost.appendChild(row);
+      });
+      mediaHost.addEventListener("click", function (e) {
+        var b = e.target.closest("button[data-mk]");
+        if (!b) return;
+        state.media[b.getAttribute("data-mk")] = b.getAttribute("data-v") === "yes";
+        refresh();
+      });
+
+      function paintMedia() {
+        MEDIA.forEach(function (m) {
+          var on = state.media[m.key];
+          var code = mediaHost.querySelector('code[data-mcode="' + m.key + '"]');
+          code.textContent = on ? "in the prompt" : "kept out";
+          code.classList.toggle("off", !on);
+          var btns = mediaHost.querySelectorAll('button[data-mk="' + m.key + '"]');
+          btns.forEach(function (b) {
+            b.setAttribute("aria-pressed", String((b.getAttribute("data-v") === "yes") === on));
+          });
+        });
+        $("dialogue-wrap").classList.toggle("hidden", !state.media.dialogue);
+      }
+
       /* ================= SUMMARY / REFRESH ================= */
 
       function summaryChips() {
@@ -1099,6 +1152,11 @@
         if (state.addons.place) chips.push("[Place]");
         if (state.addons.thing) chips.push("[Thing]");
         chips.push(state.addons.environment ? "[ENV]" : "[No]");
+        if (state.media.music) chips.push("Music");
+        if (state.media.dialogue) chips.push("Dialogue");
+        if (state.media.subtitles) chips.push("Subtitles");
+        if (state.media.text) chips.push("On-screen text");
+        if (state.media.logos) chips.push("Logo");
         return chips;
       }
 
@@ -1119,6 +1177,7 @@
         paintSeg("seg-lock", lockItems, state.lock);
         paintSeg("seg-ending", endingItems, state.ending);
         paintAddons();
+        paintMedia();
         $("val-tool").textContent = state.tool;
         $("val-duration").textContent = state.duration + " seconds";
         $("val-aspect").textContent = state.aspect === "16:9" ? "16:9 widescreen" : "9:16 vertical";
@@ -1247,7 +1306,32 @@
         lines.push("");
         lines.push("Authentic punch impacts, footwork, clothing movement, body collisions, " + (state.addons.vehicle ? "vehicle impacts, " : "") + "and environmental ambience — " + env.ambience + "." + (state.weather === "Rain" ? " Steady rainfall throughout the audio mix." : ""));
         lines.push("");
-        lines.push("No music, no dialogue, no subtitles, no text, no logos" + (bulletOK ? "" : ", no slow motion") + ", no blood, no gore.");
+        var mediaLines = [];
+        if (state.media.music) mediaLines.push("Music: a cinematic background score drives the scene — it rises with the fight, lands with the biggest impacts, and stays mixed under the impact sounds, never drowning them out.");
+        if (state.media.dialogue) {
+          var dlg = $("in-dialogue").value.trim();
+          mediaLines.push(dlg
+            ? "Dialogue — one short line only, spoken by the protagonist at the climax: \"" + dlg + "\" No other speech anywhere in the clip."
+            : "Dialogue — one short line only, spoken by the protagonist at the climax beat, brief and in character. No other speech anywhere in the clip.");
+        }
+        if (state.media.subtitles) mediaLines.push("Subtitles: clean, readable subtitles stay on screen for the spoken dialogue, timed exactly to the words.");
+        if (state.media.text) mediaLines.push("On-screen text: the title \"" + title + "\" opens the clip as a bold cinematic title card for the first seconds — clean, readable, and gone before the fighting starts.");
+        if (state.media.logos) mediaLines.push("Logos: one small, clean logo watermark sits in a corner of the frame for the whole clip, never covering the fighters.");
+        mediaLines.forEach(function (l) { lines.push(l); lines.push(""); });
+        var keptOut = [];
+        if (!state.media.music) keptOut.push("no music");
+        if (!state.media.dialogue) keptOut.push("no dialogue");
+        if (!state.media.subtitles) keptOut.push("no subtitles");
+        if (!state.media.text) keptOut.push("no text");
+        if (!state.media.logos) keptOut.push("no logos");
+        var negMedia = [];
+        if (!state.media.text) negMedia.push("no text");
+        if (!state.media.subtitles) { negMedia.push("no subtitles"); negMedia.push("no captions"); }
+        if (!state.media.logos) { negMedia.push("no logos"); negMedia.push("no watermarks"); }
+        negMedia.push("no UI elements");
+        if (!state.media.music) negMedia.push("no music");
+        if (!state.media.dialogue) { negMedia.push("no dialogue"); negMedia.push("no narration"); }
+        lines.push((keptOut.length ? cap(keptOut.join(", ")) : "Music, dialogue, subtitles, on-screen text, and logos are all in — exactly as set above") + (bulletOK ? "" : ", no slow motion") + ", no blood, no gore.");
         lines.push("");
         lines.push("CONSISTENCY & CONTINUITY");
         lines.push("");
@@ -1255,7 +1339,7 @@
         lines.push("");
         lines.push("NEGATIVE PROMPT — AVOID ALL OF THE FOLLOWING");
         lines.push("");
-        lines.push((bulletOK ? "No slow motion outside the single bullet-time arc, " : "No slow motion, no speed ramping, ") + "no teleportation, no duplicated or morphing fighters, no identity drift, no face changes, no outfit changes, no lighting changes, no flicker, no warping, no distorted limbs, no extra limbs, no extra fingers, no missing fingers, no floating or weightless bodies, no cartoon physics, no cuts or camera jumps inside a beat, no text, no subtitles, no captions, no logos, no watermarks, no UI elements, no music, no blood, no gore." + (state.power === "gravity" ? " No energy beams, no glowing hands, no aura, no magic effects, no particles, no shockwaves — the gravity power must stay completely invisible." : ""));
+        lines.push((bulletOK ? "No slow motion outside the single bullet-time arc, " : "No slow motion, no speed ramping, ") + "no teleportation, no duplicated or morphing fighters, no identity drift, no face changes, no outfit changes, no lighting changes, no flicker, no warping, no distorted limbs, no extra limbs, no extra fingers, no missing fingers, no floating or weightless bodies, no cartoon physics, no cuts or camera jumps inside a beat, " + negMedia.join(", ") + ", no blood, no gore." + (state.power === "gravity" ? " No energy beams, no glowing hands, no aura, no magic effects, no particles, no shockwaves — the gravity power must stay completely invisible." : ""));
         lines.push("");
         lines.push("HIGHEST PRIORITY: " + style.priority + " Above all, protect the lock: if any frame trades choreography for a changed face, a changed outfit, or changed lighting, the clip has failed — consistency outranks spectacle.");
 
@@ -1277,6 +1361,11 @@
           var words = text.split(/\s+/).filter(Boolean).length;
           $("out-meta").innerHTML = "<b>" + words.toLocaleString() + "</b> words · <b>" + text.length.toLocaleString() + "</b> characters · ready for " + state.tool;
           var checks = ["Timed beats", "Character lock", "One dominant camera move", "Consistency rules", "Negative / avoid list"];
+          if (state.media.music) checks.push("Music");
+          if (state.media.dialogue) checks.push("Dialogue line");
+          if (state.media.subtitles) checks.push("Subtitles");
+          if (state.media.text) checks.push("Title text");
+          if (state.media.logos) checks.push("Logo");
           if (forged && forged.extensions > 0) checks.push("Extended ×" + forged.extensions);
           $("check-strip").innerHTML = checks.map(function (c) { return "<span>" + c + "</span>"; }).join("");
         } else {
@@ -1312,8 +1401,14 @@
         state.addons.thing = false;
         state.addons.vehicle = false;
         state.addons.environment = true;
+        state.media.music = false;
+        state.media.dialogue = false;
+        state.media.subtitles = false;
+        state.media.text = false;
+        state.media.logos = false;
         $("in-title").value = "";
         $("in-note").value = "";
+        $("in-dialogue").value = "";
         refresh();
         var text = mainCharacterPrompt();
         forged = { text: text, total: 10, extensions: 0, beatLen: 2, kind: "gravity" };
@@ -1343,8 +1438,14 @@
         state.addons.thing = false;
         state.addons.vehicle = true;
         state.addons.environment = true;
+        state.media.music = false;
+        state.media.dialogue = false;
+        state.media.subtitles = false;
+        state.media.text = false;
+        state.media.logos = false;
         $("in-title").value = "";
         $("in-note").value = "";
+        $("in-dialogue").value = "";
         refresh();
         var text = forgePrompt();
         forged = { text: text, total: state.duration, extensions: 0, beatLen: state.duration / 5, kind: "standard" };
