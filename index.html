@@ -1,0 +1,1873 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="data:," />
+    <title>Action Forge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        --bg:#0a0a0c;
+        --bg2:#101013;
+        --panel:#141417;
+        --panel2:#1a1a1f;
+        --line:rgba(212,175,55,.28);
+        --line-soft:rgba(212,175,55,.14);
+        --gold:#d4af37;
+        --gold-hi:#f1d27a;
+        --gold-deep:#9a7b1e;
+        --ink:#f4eedd;
+        --muted:#a89f8a;
+        --muted2:#7d7663;
+        --danger:#e0654f;
+        --radius:16px;
+      }
+      *{ box-sizing:border-box; }
+      html,body{ margin:0; padding:0; }
+      body{
+        background:
+          radial-gradient(1100px 500px at 85% -10%, rgba(212,175,55,.10), transparent 60%),
+          radial-gradient(800px 420px at -10% 30%, rgba(212,175,55,.05), transparent 55%),
+          var(--bg);
+        color:var(--ink);
+        font-family:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+        -webkit-font-smoothing:antialiased;
+        min-height:100vh;
+      }
+      button, select, input, textarea{ font:inherit; }
+      button{ min-height:44px; cursor:pointer; }
+      .wrap{ max-width:1180px; margin:0 auto; padding:20px 16px 56px; }
+
+      /* ---------- Header ---------- */
+      header.top{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:6px 2px 18px; border-bottom:1px solid var(--line-soft); }
+      .brand h1{
+        font-family:"Cinzel", serif; font-weight:800; letter-spacing:.14em;
+        font-size:clamp(26px, 4.5vw, 40px); margin:0; line-height:1;
+        background:linear-gradient(175deg, #f7e08b 0%, #d4af37 45%, #a37f22 80%, #d4af37 100%);
+        -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
+      }
+      .brand p{ margin:6px 0 0; color:var(--muted); font-size:13.5px; font-weight:600; letter-spacing:.04em; }
+      .brand .rule{ width:64px; height:3px; margin-top:10px; background:linear-gradient(90deg, var(--gold), transparent); border-radius:2px; }
+      .premium-chip{
+        border:1px solid var(--line); color:var(--gold-hi); border-radius:999px;
+        padding:8px 14px; font-size:12px; font-weight:800; letter-spacing:.18em; text-transform:uppercase;
+        background:rgba(212,175,55,.06); white-space:nowrap;
+      }
+
+      /* ---------- Mode tabs ---------- */
+      .mode-tabs{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:20px 0 18px; }
+      .mode-tab{
+        border:1px solid var(--line-soft); background:var(--panel); color:var(--muted);
+        border-radius:var(--radius); padding:14px 16px; text-align:left; min-height:64px;
+        display:flex; flex-direction:column; gap:2px; transition:border-color .15s, background .15s, color .15s;
+      }
+      .mode-tab strong{ font-size:16.5px; font-weight:800; letter-spacing:.02em; color:var(--ink); }
+      .mode-tab span{ font-size:12.5px; font-weight:600; }
+      .mode-tab[aria-selected="true"]{
+        border-color:var(--gold); color:var(--gold-hi);
+        background:linear-gradient(180deg, rgba(212,175,55,.16), rgba(212,175,55,.05));
+        box-shadow:0 0 0 1px rgba(212,175,55,.35), 0 10px 28px -14px rgba(212,175,55,.45);
+      }
+      .mode-tab[aria-selected="true"] strong{ color:var(--gold-hi); }
+
+      /* ---------- Layout ---------- */
+      .layout{ display:grid; grid-template-columns:1fr; gap:18px; align-items:start; }
+      @media (min-width:960px){
+        .layout{ grid-template-columns:minmax(0,1fr) minmax(0,1.05fr); }
+        .output-card{ position:sticky; top:16px; }
+      }
+      .card{
+        background:linear-gradient(180deg, var(--panel2), var(--panel));
+        border:1px solid var(--line-soft); border-radius:var(--radius); padding:18px;
+      }
+      .card + .card{ margin-top:14px; }
+      .card h2{
+        margin:0 0 4px; font-family:"Cinzel", serif; font-size:15px; font-weight:700;
+        letter-spacing:.16em; text-transform:uppercase; color:var(--gold-hi);
+      }
+      .card .hint{ margin:0 0 12px; color:var(--muted); font-size:13px; font-weight:500; line-height:1.45; }
+
+      .group{ margin-top:16px; }
+      .group:first-of-type{ margin-top:10px; }
+      .group-label{
+        display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+        font-size:11.5px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:var(--muted);
+        margin-bottom:8px;
+      }
+      .group-label .val{ color:var(--gold-hi); letter-spacing:.04em; text-transform:none; font-size:12.5px; }
+
+      /* ---------- Segmented pills ---------- */
+      .seg{ display:flex; flex-wrap:wrap; gap:8px; }
+      .seg button{
+        border:1px solid var(--line-soft); background:#101013; color:var(--ink);
+        border-radius:999px; padding:9px 16px; font-weight:700; font-size:14px; min-height:44px;
+        transition:border-color .12s, background .12s, color .12s;
+      }
+      .seg button:hover{ border-color:var(--line); }
+      .seg button[aria-pressed="true"]{
+        background:linear-gradient(180deg, #f1d27a, #d4af37 60%, #b8912a);
+        border-color:#f1d27a; color:#191204; box-shadow:0 6px 18px -8px rgba(212,175,55,.7);
+      }
+      .seg button .sub{ display:block; font-size:11px; font-weight:600; opacity:.75; letter-spacing:.02em; }
+      .seg.grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); }
+      .seg.grid button{ border-radius:12px; text-align:left; padding:10px 14px; line-height:1.25; }
+
+      /* ---------- Yes / No add-on rows ---------- */
+      .addon{
+        display:flex; align-items:center; justify-content:space-between; gap:12px;
+        padding:10px 0; border-bottom:1px dashed rgba(212,175,55,.12);
+      }
+      .addon:last-child{ border-bottom:none; }
+      .addon .who{ min-width:0; }
+      .addon .who strong{ display:block; font-size:14.5px; font-weight:800; }
+      .addon .who code{
+        font-family:"JetBrains Mono", ui-monospace, monospace; font-size:12px; color:var(--gold-hi);
+        background:rgba(212,175,55,.08); border:1px solid var(--line-soft); border-radius:6px; padding:1px 7px;
+        display:inline-block; margin-top:3px;
+      }
+      .addon .who code.off{ color:var(--muted2); background:transparent; }
+      .yn{ display:flex; gap:6px; flex:none; }
+      .yn button{
+        min-width:58px; min-height:40px; border-radius:999px; padding:6px 14px;
+        border:1px solid var(--line-soft); background:#101013; color:var(--muted); font-weight:800; font-size:13.5px;
+      }
+      .yn button[aria-pressed="true"]{
+        background:linear-gradient(180deg, #f1d27a, #d4af37 60%, #b8912a); border-color:#f1d27a; color:#191204;
+      }
+
+      /* ---------- Text input ---------- */
+      .textin{
+        width:100%; background:#0d0d10; border:1px solid var(--line-soft); color:var(--ink);
+        border-radius:12px; padding:12px 14px; font-size:15px; min-height:48px; outline:none;
+      }
+      .textin:focus{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,175,55,.18); }
+      .textin::placeholder{ color:var(--muted2); }
+
+      /* ---------- Big actions ---------- */
+      .btn-gold{
+        width:100%; border:none; border-radius:14px; min-height:56px;
+        background:linear-gradient(180deg, #f7e08b, #d4af37 55%, #a97f22);
+        color:#191204; font-weight:800; font-size:16.5px; letter-spacing:.06em; text-transform:uppercase;
+        box-shadow:0 14px 30px -12px rgba(212,175,55,.65), inset 0 1px 0 rgba(255,255,255,.5);
+      }
+      .btn-gold:active{ transform:translateY(1px); }
+      .btn-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+      .btn-ghost{
+        flex:1 1 auto; border:1px solid var(--line); background:rgba(212,175,55,.05); color:var(--gold-hi);
+        border-radius:12px; padding:10px 16px; font-weight:800; font-size:14px; min-height:48px;
+      }
+      .btn-ghost:hover{ background:rgba(212,175,55,.12); }
+      .btn-ghost:disabled{ opacity:.38; cursor:not-allowed; }
+      .btn-ghost:disabled:hover{ background:rgba(212,175,55,.05); }
+
+      /* ---------- Output ---------- */
+      .output-card{ border:1px solid var(--line); box-shadow:0 24px 50px -30px rgba(0,0,0,.9), 0 0 0 1px rgba(212,175,55,.06); }
+      .output-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+      .status-line{ font-size:12.5px; font-weight:700; color:var(--muted); letter-spacing:.03em; }
+      .status-line b{ color:var(--gold-hi); }
+      textarea.out{
+        width:100%; margin-top:12px; min-height:430px; resize:vertical;
+        background:#0b0b0e; border:1px solid var(--line-soft); border-radius:12px; color:#efe8d2;
+        font-family:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size:12.8px; line-height:1.62; padding:14px; outline:none;
+      }
+      textarea.out:focus{ border-color:var(--gold); }
+      .summary-strip{
+        display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;
+      }
+      .summary-strip span{
+        font-size:11.5px; font-weight:800; letter-spacing:.05em; color:var(--gold-hi);
+        border:1px solid var(--line-soft); background:rgba(212,175,55,.06); border-radius:999px; padding:5px 10px;
+      }
+      .toast{
+        margin-top:10px; font-size:13px; font-weight:700; color:var(--gold-hi); min-height:18px;
+      }
+      .swap-big{
+        font-family:"JetBrains Mono", ui-monospace, monospace; font-size:15.5px; line-height:1.6;
+        background:#0b0b0e; border:1px solid var(--line); border-radius:12px; padding:16px; color:#f7eecb;
+        min-height:76px; display:flex; align-items:center;
+      }
+      .swap-big.empty{ color:var(--muted2); font-family:"Manrope", sans-serif; font-size:14px; font-weight:600; }
+      .card.preset{ border-color:var(--gold); background:linear-gradient(180deg, rgba(212,175,55,.10), var(--panel)); }
+      .workflow{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px 24px; margin:2px 0 22px; padding:0 2px; cursor:default; }
+      @media (max-width:640px){ .workflow{ grid-template-columns:1fr 1fr; gap:14px 20px; } }
+      .workflow div{ border:none; background:transparent; border-radius:0; padding:0; cursor:default; }
+      .workflow b{ display:block; font-size:12.5px; letter-spacing:.02em; text-transform:none; color:var(--ink); font-weight:700; margin-bottom:3px; }
+      .workflow span{ font-size:12.5px; color:var(--muted); font-weight:500; line-height:1.45; display:block; }
+      .steps{ display:grid; gap:8px; margin:0 0 14px; }
+      .steps div{ display:flex; gap:10px; align-items:flex-start; background:#0d0d10; border:1px solid var(--line-soft); border-radius:10px; padding:10px 12px; font-size:13.5px; font-weight:600; color:var(--ink); line-height:1.45; }
+      .steps i{ font-style:normal; flex:none; width:22px; height:22px; border-radius:50%; background:linear-gradient(180deg,#f1d27a,#b8912a); color:#191204; font-weight:800; font-size:12.5px; display:flex; align-items:center; justify-content:center; margin-top:1px; }
+      .steps code{ font-family:"JetBrains Mono", ui-monospace, monospace; font-size:12px; color:var(--gold-hi); }
+      .meta-line{ margin-top:10px; font-size:12.5px; font-weight:700; color:var(--muted); letter-spacing:.02em; min-height:16px; }
+      .meta-line b{ color:var(--gold-hi); }
+      .check-strip{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+      .check-strip span{ font-size:11.5px; font-weight:800; letter-spacing:.04em; color:var(--ink); border:1px solid var(--line-soft); background:rgba(212,175,55,.05); border-radius:999px; padding:5px 10px; }
+      .check-strip span::before{ content:"✓ "; color:var(--gold-hi); font-weight:800; }
+      .preset-alt{ width:100%; margin-top:10px; }
+      textarea.note-in{ width:100%; background:#0d0d10; border:1px solid var(--line-soft); color:var(--ink); border-radius:12px; padding:12px 14px; font-size:14.5px; min-height:64px; resize:vertical; outline:none; font-family:inherit; }
+      textarea.note-in:focus{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,175,55,.18); }
+      textarea.note-in::placeholder{ color:var(--muted2); }
+      /* ---------- Compact mode ---------- */
+      .compact-box{ margin-top:14px; border:1px solid var(--line-soft); background:rgba(212,175,55,.05); border-radius:12px; padding:13px 14px; }
+      .compact-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+      .compact-top strong{ display:block; font-size:14.5px; font-weight:800; letter-spacing:.02em; }
+      .compact-top span{ display:block; font-size:12.5px; color:var(--muted); font-weight:600; margin-top:2px; line-height:1.4; }
+      .compact-toggle{ display:flex; gap:6px; flex:none; }
+      .compact-toggle button{
+        min-width:86px; min-height:40px; border-radius:999px; padding:6px 14px;
+        border:1px solid var(--line-soft); background:#101013; color:var(--muted); font-weight:800; font-size:13.5px;
+      }
+      .compact-toggle button[aria-pressed="true"]{
+        background:linear-gradient(180deg, #f1d27a, #d4af37 60%, #b8912a); border-color:#f1d27a; color:#191204;
+      }
+      .compact-meter{ margin-top:12px; }
+      .compact-count{ font-size:12.5px; font-weight:700; color:var(--muted); letter-spacing:.02em; line-height:1.45; }
+      .compact-count b{ color:var(--gold-hi); }
+      .compact-count.over b{ color:var(--danger); }
+      .compact-bar{ height:8px; margin-top:7px; background:#0d0d10; border:1px solid var(--line-soft); border-radius:999px; overflow:hidden; }
+      .compact-bar i{ display:block; height:100%; width:0%; background:linear-gradient(90deg, #b8912a, #f1d27a); transition:width .2s ease; }
+      .compact-bar.over i{ background:linear-gradient(90deg, #a33b28, var(--danger)); }
+      .compact-help{ margin-top:11px; font-size:13px; color:var(--muted); font-weight:500; line-height:1.55; }
+      .compact-help b{ color:var(--ink); }
+      .compact-help p{ margin:0 0 7px; }
+      .compact-help p:last-child{ margin-bottom:0; }
+      .hidden{ display:none !important; }
+      .swap-divider{ border:none; border-top:1px dashed rgba(212,175,55,.18); margin:18px 0 14px; }
+      .swap-panel{ display:grid; gap:12px; }
+      .swap-panel label{ display:block; font-size:11.5px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+      .swap-type-desc{ margin:8px 0 0; color:var(--muted); font-size:13px; font-weight:500; line-height:1.5; border:1px solid var(--line-soft); background:rgba(212,175,55,.05); border-radius:10px; padding:10px 12px; }
+      footer.note{ margin-top:22px; color:var(--muted2); font-size:12.5px; font-weight:600; text-align:center; letter-spacing:.03em; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <div class="brand">
+          <h1>ACTION FORGE</h1>
+          <p>Swap prompts &amp; timed cinematic action prompts — built your way, beat by beat.</p>
+          <div class="rule"></div>
+        </div>
+        <div class="premium-chip">◆ Gold Premium</div>
+      </header>
+
+      <!-- Mode tabs -->
+      <div class="mode-tabs" role="tablist" aria-label="Prompt mode">
+        <button class="mode-tab" id="tab-swap" role="tab" aria-selected="false" data-mode="swap">
+          <strong>Swap Prompt</strong>
+          <span>Character, object &amp; reference-image templates</span>
+        </button>
+        <button class="mode-tab" id="tab-action" role="tab" aria-selected="true" data-mode="action">
+          <strong>Action Prompt</strong>
+          <span>Full timed fight builder — Dragon format</span>
+        </button>
+      </div>
+
+      <!-- Workflow strip -->
+      <div class="workflow" aria-label="How Action Forge works">
+        <div><b>1 · Lock</b><span>Add your character photo as IMAGE 1 in your video tool — the lock in your prompt holds face, outfit &amp; light in every frame.</span></div>
+        <div><b>2 · Direct</b><span>Pick tool, camera move, speed, scene, style &amp; power.</span></div>
+        <div><b>3 · Forge</b><span>Get a timed, director-grade prompt with camera, physics &amp; avoid rules.</span></div>
+        <div><b>4 · Extend</b><span>Continue from the exact final frame — no reset, no drift.</span></div>
+      </div>
+
+      <!-- ============ SWAP MODE ============ -->
+      <section id="view-swap" class="hidden" aria-labelledby="tab-swap">
+        <div class="card">
+          <h2>Swap Studio</h2>
+          <p class="hint">Three director-grade swap templates — pick the job, describe what's in the video and what replaces it, and Forge writes the exact prompt. Set up your tool like this first:</p>
+          <div class="steps">
+            <div><i>1</i><span>Attach your source clip as <code>@Video1</code> — it supplies all motion, timing &amp; camera.</span></div>
+            <div><i>2</i><span>For a reference-image swap, attach the new person / product photo as <code>@Image1</code> — it supplies the exact identity.</span></div>
+            <div><i>3</i><span>Paste the forged prompt below. Never type a real person's name — describe them, or let the image be the identity.</span></div>
+          </div>
+
+          <div class="group">
+            <div class="group-label">Swap Type <span class="val" id="val-swaptype">Character / Person</span></div>
+            <div class="seg grid" id="seg-swaptype" role="group" aria-label="Swap type">
+              <button type="button" data-swaptype="character" aria-pressed="true">Character / Person<span class="sub">Face, outfit, or full body</span></button>
+              <button type="button" data-swaptype="object" aria-pressed="false">Object / Prop<span class="sub">Held, worn, or interacted with</span></button>
+              <button type="button" data-swaptype="reference" aria-pressed="false">Reference Image<span class="sub">Video + @Image1 photo</span></button>
+            </div>
+            <p class="swap-type-desc" id="swap-type-desc">Use this when replacing a person in a video while keeping their exact body movement, camera angle, and lighting intact.</p>
+          </div>
+
+          <!-- Character / Person panel -->
+          <div class="swap-panel" id="panel-character">
+            <div>
+              <label for="in-orig-person">Original person in the video</label>
+              <input class="textin" id="in-orig-person" type="text" maxlength="140" placeholder="e.g. the man in the blue jacket" />
+            </div>
+            <div>
+              <label for="in-new-person">New person / character</label>
+              <input class="textin" id="in-new-person" type="text" maxlength="180" placeholder="e.g. a woman in her late 20s wearing a tailored camel trench coat and silver hoop earrings" />
+            </div>
+            <div>
+              <label>Scene lighting to match</label>
+              <div class="seg" id="seg-lighting" role="group" aria-label="Scene lighting">
+                <button type="button" data-light="warm golden-hour rim lighting" aria-pressed="true">Warm golden-hour rim</button>
+                <button type="button" data-light="cool overcast daylight" aria-pressed="false">Cool overcast daylight</button>
+                <button type="button" data-light="moody night lighting from practical sources" aria-pressed="false">Moody night practicals</button>
+                <button type="button" data-light="hard midday sunlight" aria-pressed="false">Hard midday sun</button>
+                <button type="button" data-light="soft natural window light" aria-pressed="false">Soft window light</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Object / Prop panel -->
+          <div class="swap-panel hidden" id="panel-object">
+            <div>
+              <label for="in-orig-object">Original object in the video</label>
+              <input class="textin" id="in-orig-object" type="text" maxlength="160" placeholder="e.g. the white paper coffee cup in the person's right hand" />
+            </div>
+            <div>
+              <label for="in-new-object">New object</label>
+              <input class="textin" id="in-new-object" type="text" maxlength="180" placeholder="e.g. a sleek matte-black stainless steel insulated tumbler with subtle condensation" />
+            </div>
+            <p class="hint" style="margin:0">Works for anything held, worn, or interacted with — a coffee cup, phone, car, or product.</p>
+          </div>
+
+          <!-- Reference Image panel -->
+          <div class="swap-panel hidden" id="panel-reference">
+            <div>
+              <label for="in-orig-ref">Original subject / object in the video</label>
+              <input class="textin" id="in-orig-ref" type="text" maxlength="160" placeholder="e.g. the man in the blue jacket — or — the white paper coffee cup" />
+            </div>
+            <div>
+              <label>What the reference image shows</label>
+              <div class="seg" id="seg-reftype" role="group" aria-label="Reference image type">
+                <button type="button" data-reftype="person" aria-pressed="true">Person</button>
+                <button type="button" data-reftype="product" aria-pressed="false">Product</button>
+              </div>
+            </div>
+            <p class="hint" style="margin:0">Use this when your tool accepts both a source video and a reference image (<code>@image</code> / <code>@Image1</code> or uploaded asset).</p>
+          </div>
+
+          <div style="height:16px"></div>
+          <button class="btn-gold" id="swap-forge">Forge Swap Prompt</button>
+
+          <div style="height:14px"></div>
+          <div class="swap-big empty" id="swap-out">Your swap prompt will appear here. Leave a field blank and Forge uses the example wording for that slot.</div>
+          <div class="btn-row">
+            <button class="btn-ghost" id="swap-copy" disabled>Copy</button>
+            <button class="btn-ghost" id="swap-download" disabled>Download .txt</button>
+          </div>
+          <div class="toast" id="swap-toast" role="status"></div>
+
+          <hr class="swap-divider" />
+          <div class="group-label">Quick Lines <span class="val">one tap, no fields</span></div>
+          <button class="btn-ghost" id="swap-basic" style="width:100%">Simple Swap Line</button>
+          <div style="height:8px"></div>
+          <button class="btn-ghost" id="swap-lock" style="width:100%">Swap Prompt + Full Lock Version</button>
+          <div style="height:8px"></div>
+          <button class="btn-ghost" id="swap-pro" style="width:100%">Swap Pro — Motion, Camera &amp; Light Lock</button>
+        </div>
+      </section>
+
+      <!-- ============ ACTION MODE ============ -->
+      <section id="view-action" aria-labelledby="tab-action">
+        <div class="layout">
+          <div>
+            <!-- Pro presets -->
+            <div class="card preset">
+              <h2>Pro Presets</h2>
+              <p class="hint">Hand-built, director-grade scenes. One tap loads the complete prompt into the output — copy it straight into your tool.</p>
+              <button class="btn-gold" id="btn-main">Load Main Character — Directional Gravity</button>
+              <p class="hint" style="margin:12px 0 0">10 seconds · 16:9 · 3x action speed · one continuous take, no slow motion. The Main Character (IMAGE 1) — locked to your reference photo — walks calm through a charging crowd while selected attackers fall sideways, forward, up into the sky, orbit him, then drop all at once when gravity snaps back. No visible effects of any kind. Open ending, built to extend.</p>
+              <button class="btn-ghost preset-alt" id="btn-dragon">Load the Dragon — Wing Chun Classic</button>
+              <p class="hint" style="margin:10px 0 0">The original template: Seedance · 10s · 16:9 · 1 vs 10 · Hong Kong street at night · Wing Chun, no powers, cut on impact. One tap sets every control and forges it.</p>
+            </div>
+
+            <!-- Tool + format -->
+            <div class="card">
+              <h2>Tool &amp; Format</h2>
+              <p class="hint">Pick the AI video tool this prompt is written for, then lock the length and frame.</p>
+
+              <div class="group">
+                <div class="group-label">Tool <span class="val" id="val-tool"></span></div>
+                <div class="seg" id="seg-tool" role="group" aria-label="AI video tool"></div>
+              </div>
+
+              <div class="group">
+                <div class="group-label">Duration <span class="val" id="val-duration"></span></div>
+                <div class="seg" id="seg-duration" role="group" aria-label="Duration"></div>
+              </div>
+
+              <div class="group">
+                <div class="group-label">Aspect Ratio <span class="val" id="val-aspect"></span></div>
+                <div class="seg" id="seg-aspect" role="group" aria-label="Aspect ratio"></div>
+              </div>
+
+              <div class="group">
+                <div class="group-label">Scene Title <span class="val">optional</span></div>
+                <input class="textin" id="in-title" type="text" maxlength="60" placeholder="Leave blank — Forge names it from your fight style" />
+              </div>
+
+              <div class="group">
+                <div class="group-label">Opponents <span class="val" id="val-opponents"></span></div>
+                <div class="seg" id="seg-opponents" role="group" aria-label="Opponent count"></div>
+              </div>
+
+              <div class="group">
+                <div class="group-label">Character Lock <span class="val" id="val-lock"></span></div>
+                <div class="seg" id="seg-lock" role="group" aria-label="Character lock strength"></div>
+                <p class="hint" style="margin:8px 0 0">Ultra Lock repeats the identity lock in the header, every extension, and the avoid list — same face, same outfit, same light, zero drift.</p>
+              </div>
+            </div>
+
+            <!-- Add-ons -->
+            <div class="card">
+              <h2>Add-Ons</h2>
+              <p class="hint">Yes drops the tag straight into the prompt. No leaves it out — environment No writes <b>[No]</b>.</p>
+              <div id="addons"></div>
+            </div>
+
+            <!-- Sound & screen -->
+            <div class="card">
+              <h2>Sound &amp; Screen</h2>
+              <p class="hint">Your call on what makes it into the finished clip. <b>Yes</b> writes it into the prompt; <b>No</b> keeps it out — and adds it to the avoid list so the tool doesn't sneak it in.</p>
+              <div id="media"></div>
+              <div class="group hidden" id="dialogue-wrap">
+                <div class="group-label">Dialogue Line <span class="val">one short sentence</span></div>
+                <input class="textin" id="in-dialogue" type="text" maxlength="90" placeholder="e.g. You picked the wrong street." />
+                <p class="hint" style="margin:8px 0 0">The one line your fighter speaks, at the climax. Leave it blank and Forge just calls for one short line there.</p>
+              </div>
+            </div>
+
+            <!-- Scene -->
+            <div class="card">
+              <h2>The Scene</h2>
+              <div class="group">
+                <div class="group-label">Environment <span class="val" id="val-env"></span></div>
+                <div class="seg grid" id="seg-env" role="group" aria-label="Environment"></div>
+              </div>
+              <div class="group">
+                <div class="group-label">Time of Day <span class="val" id="val-daynight"></span></div>
+                <div class="seg" id="seg-daynight" role="group" aria-label="Day or night"></div>
+              </div>
+              <div class="group">
+                <div class="group-label">Weather <span class="val" id="val-weather"></span></div>
+                <div class="seg" id="seg-weather" role="group" aria-label="Rain or dry"></div>
+              </div>
+              <div class="group">
+                <div class="group-label">Outfit <span class="val" id="val-outfit"></span></div>
+                <div class="seg grid" id="seg-outfit" role="group" aria-label="Outfit"></div>
+              </div>
+            </div>
+
+            <!-- Camera & direction -->
+            <div class="card">
+              <h2>Camera &amp; Direction</h2>
+              <p class="hint">One dominant move carries the whole clip — the Higgsfield rule. Supporting angles stay secondary so the move never gets muddy. Camera language adapted from the Techpresso Higgsfield prompt library.</p>
+              <div class="group">
+                <div class="group-label">Dominant Camera Move <span class="val" id="val-camera"></span></div>
+                <div class="seg grid" id="seg-camera" role="group" aria-label="Dominant camera move"></div>
+              </div>
+              <div class="group">
+                <div class="group-label">Action Speed <span class="val" id="val-speed"></span></div>
+                <div class="seg" id="seg-speed" role="group" aria-label="Action speed"></div>
+              </div>
+              <div class="group">
+                <div class="group-label">Take Style <span class="val" id="val-take"></span></div>
+                <div class="seg" id="seg-take" role="group" aria-label="Take style"></div>
+              </div>
+            </div>
+
+            <!-- Fight -->
+            <div class="card">
+              <h2>The Fight</h2>
+              <div class="group">
+                <div class="group-label">Fight Style <span class="val" id="val-style"></span></div>
+                <div class="seg grid" id="seg-style" role="group" aria-label="Fight style"></div>
+              </div>
+              <div class="group">
+                <div class="group-label">Power <span class="val" id="val-power"></span></div>
+                <div class="seg grid" id="seg-power" role="group" aria-label="Power"></div>
+              </div>
+              <div class="group">
+                <div class="group-label">Ending <span class="val" id="val-ending"></span></div>
+                <div class="seg" id="seg-ending" role="group" aria-label="Ending style"></div>
+              </div>
+              <div class="group">
+                <div class="group-label">Director's Note <span class="val">optional</span></div>
+                <textarea class="note-in" id="in-note" maxlength="240" placeholder="One line of your own direction — e.g. “He never draws the sword.” It lands in the prompt word for word."></textarea>
+              </div>
+              <div style="height:16px"></div>
+              <button class="btn-gold" id="btn-generate">Forge My Prompt</button>
+              <div class="summary-strip" id="summary-strip" aria-label="Current build summary"></div>
+            </div>
+          </div>
+
+          <!-- Output -->
+          <div class="card output-card">
+            <div class="output-head">
+              <h2 style="margin:0">Your Prompt</h2>
+              <div class="status-line" id="status-line">Nothing forged yet</div>
+            </div>
+
+            <!-- Compact mode -->
+            <div class="compact-box" id="compact-box">
+              <div class="compact-top">
+                <div>
+                  <strong>Compact Mode</strong>
+                  <span>Short version — forges automatically when you turn it on.</span>
+                </div>
+                <div class="compact-toggle" role="group" aria-label="Prompt length">
+                  <button type="button" id="compact-full" aria-pressed="true">Full</button>
+                  <button type="button" id="compact-on" aria-pressed="false">Compact</button>
+                </div>
+              </div>
+              <div class="compact-meter" aria-live="polite">
+                <div class="compact-count" id="compact-count"><b>0</b> / 2,500 characters · <b>2,500</b> left for your @ tags</div>
+                <div class="compact-bar" id="compact-bar"><i id="compact-bar-fill"></i></div>
+              </div>
+              <div class="compact-help" id="compact-instructions">
+                <p><b>What Compact does:</b> it rewrites the same prompt in short form so it fits under Kling's 2,500-character cap — with room left for your <b>@Image1</b> person tag and <b>@Image2 / [Vehicle]</b> tag. It keeps the character lock, the vehicle lock (when Vehicle is on), the environment, every beat as one short line (time, action, object), one camera move, speed, aspect, and the negative list. Each lock is stated <b>once</b>, camera / motion / physics / visual / audio are merged into <b>one short line</b>, and the long “highest priority” and consistency paragraphs are dropped — they only repeat what the locks already say.</p>
+                <p><b>When to use it:</b> use Compact when Kling or Seedance says you've reached the prompt limit, or before pasting whenever you still need to add @ tags in the tool. Check the count above first — the number “left for your @ tags” is the room you have. Use <b>Full</b> instead when your tool accepts longer prompts (for example Kling 4.0's higher cap) and you want every director detail spelled out.</p>
+              </div>
+            </div>
+
+            <textarea class="out" id="out" readonly placeholder="Set your choices on the left, then hit FORGE MY PROMPT. Your polished, fully timed prompt lands here — copy it straight into your tool."></textarea>
+            <div class="meta-line" id="out-meta"></div>
+            <div class="check-strip" id="check-strip" aria-label="What this prompt includes"></div>
+            <div class="btn-row">
+              <button class="btn-ghost" id="btn-copy" disabled>Copy Prompt</button>
+              <button class="btn-ghost" id="btn-download" disabled>Download .txt</button>
+            </div>
+            <div class="btn-row">
+              <button class="btn-ghost" id="btn-copy-neg" disabled>Copy Negative Only</button>
+            </div>
+            <div class="btn-row">
+              <button class="btn-ghost" id="btn-extend" disabled aria-describedby="extend-locked-hint">＋ Extend — Continue the Action</button>
+            </div>
+            <p class="hint" id="extend-locked-hint" style="margin:8px 0 0; color:var(--gold-hi); font-weight:700">Extend stays greyed out until you forge a prompt — hit Forge My Prompt or load a preset first, and it unlocks.</p>
+            <p class="hint" style="margin-top:10px">Extend picks up from the exact final frame of your last beat and adds the next timed round — same fighter, same outfit, same scene, no reset. Extend as many times as you need.</p>
+            <div class="toast" id="toast" role="status"></div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="note">Action Forge — swap it, forge it, extend it.</footer>
+    </div>
+
+    <script>
+      "use strict";
+
+      /* ================= DATA ================= */
+
+      var TOOLS = ["Seedance", "Kling", "Minimax", "Grok", "Flow", "Hedra"];
+      var DURATIONS = [10, 15];
+      var ASPECTS = [
+        { id: "16:9", label: "16:9", sub: "Widescreen" },
+        { id: "9:16", label: "9:16", sub: "Vertical" }
+      ];
+      var OPPONENTS = [5, 10];
+
+      var ENVIRONMENTS = {
+        street: {
+          name: "Hong Kong Street",
+          setting: "a narrow Hong Kong street lined with parked cars, shopfronts, and stacked plastic crates",
+          prop: "parked car",
+          prop2: "stack of plastic crates",
+          surface: "the pavement",
+          ambience: "distant traffic, neon signage hum, and street echo"
+        },
+        rooftop: {
+          name: "Rooftop Skyline",
+          setting: "a high-rise rooftop at the edge of a glowing city skyline, ringed with AC units, vents, and a low parapet wall",
+          prop: "AC unit housing",
+          prop2: "rooftop vent stack",
+          surface: "the rooftop gravel",
+          ambience: "high wind, distant city traffic far below, and humming rooftop machinery"
+        },
+        warehouse: {
+          name: "Warehouse Interior",
+          setting: "a vast warehouse interior of steel shelving, stacked crates, hanging chains, and shafts of light through high windows",
+          prop: "stack of wooden crates",
+          prop2: "steel shelving unit",
+          surface: "the concrete floor",
+          ambience: "echoing footsteps, rattling chains, and hollow industrial reverb"
+        },
+        highway: {
+          name: "Desert Highway",
+          setting: "an empty desert highway at the edge of town, fuel drums and a rusted road sign beside cracked asphalt stretching to the horizon",
+          prop: "stack of fuel drums",
+          prop2: "rusted road sign",
+          surface: "the cracked asphalt",
+          ambience: "dry wind, distant highway hum, and grit blowing across the road"
+        },
+        temple: {
+          name: "Temple Courtyard",
+          setting: "an ancient stone temple courtyard of carved pillars, wide worn steps, and hanging lanterns",
+          prop: "carved stone pillar",
+          prop2: "wide stone steps",
+          surface: "the worn stone ground",
+          ambience: "wind through the pillars, distant bells, and echoing stone acoustics"
+        }
+      };
+
+      var OUTFITS = {
+        regular: {
+          name: "Regular",
+          line: "Preserve 100% exact facial identity, hairstyle, outfit, body proportions, and physical appearance from IMAGE 1 in every frame."
+        },
+        bond: {
+          name: "James Bond Suit",
+          line: "Use IMAGE 1 as the protagonist and preserve 100% exact facial identity, hairstyle, and body proportions in every frame. He now wears a perfectly tailored black James Bond suit — fitted tuxedo jacket, crisp white shirt, black bow tie, polished dress shoes — and the suit stays sharp and intact through the entire fight, with realistic fabric physics on every movement."
+        },
+        matrix: {
+          name: "Matrix",
+          line: "Use IMAGE 1 as the protagonist and preserve 100% exact facial identity, hairstyle, and body proportions in every frame. He now wears the full Matrix look — long black trench coat, black shirt and trousers, black boots, dark sunglasses — and the coat billows and snaps with realistic physics on every strike, spin, and landing."
+        },
+        tactical: {
+          name: "Tactical Black",
+          line: "Use IMAGE 1 as the protagonist and preserve 100% exact facial identity, hairstyle, and body proportions in every frame. He now wears a fitted black tactical outfit — black combat shirt, cargo trousers, gloves, and boots — with realistic fabric and gear physics on every movement."
+        }
+      };
+
+      var POWERS = {
+        none: {
+          name: "No Special Powers",
+          sub: "Pure skill only",
+          flourish: "",
+          physics: "believable human limits — every feat is earned through technique, timing, and conditioning",
+          visual: "No superhuman effects of any kind: pure skill, conditioning, and fight IQ carry every beat."
+        },
+        speed: {
+          name: "Superhuman Speed",
+          sub: "Faster than the eye",
+          flourish: " moving with superhuman speed — his strikes land a half-second before the opponents' reactions even begin, a faint motion trail ghosting off his limbs",
+          physics: "superhuman speed with grounded weight — blinding hand speed and footwork, but every impact still lands with real mass, real contact, and real reaction",
+          visual: "Superhuman speed reads through reaction delay and subtle motion trails only — no teleportation, no disappearing, no artificial speed ramping."
+        },
+        strength: {
+          name: "Superhuman Strength",
+          sub: "One hit ends it",
+          flourish: " channeling superhuman strength — every clean strike folds the opponent and sends him skidding across the ground",
+          physics: "superhuman strength with believable transfer — opponents are launched by clean technique amplified by raw power, and the environment dents, cracks, and scatters on impact",
+          visual: "Superhuman strength reads through impact distance and environmental damage — bodies skid, props crack, surfaces dent — never cartoon physics."
+        },
+        agility: {
+          name: "Enhanced Agility",
+          sub: "Walls are floors",
+          flourish: " flowing with enhanced agility — wall runs, vaults, and mid-air direction changes chained without a single wasted motion",
+          physics: "enhanced agility with honest momentum — wall runs, flips, and aerial turns all obey believable takeoff, rotation, and landing mechanics",
+          visual: "Enhanced agility reads through impossible-but-believable acrobatics — every aerial move has a visible launch, rotation, and landing."
+        },
+        reflexes: {
+          name: "Lightning Reflexes",
+          sub: "Sees it before it comes",
+          flourish: " reading every attack with lightning reflexes — he is already moving out of the line of fire before each strike fully launches",
+          physics: "lightning reflexes with realistic bodies — he evades by inches and counters inside the opponent's own motion, never by freezing time",
+          visual: "Lightning reflexes read through last-inch evasion and instant counters — no slow motion, no time effects."
+        },
+        gravity: {
+          name: "Directional Gravity",
+          sub: "Invisible — no effects",
+          flourish: " while the attackers he selects suddenly fall the wrong way — sideways, forward, or straight up — with no visible cause at all",
+          physics: "selective directional gravity with ZERO visible effects — he shoots no energy and generates no magic; he simply changes the direction of gravity affecting specifically selected attackers, and they fall in that direction with full real-world weight, acceleration, and impact while everyone he has not selected obeys normal gravity",
+          visual: "The power is completely invisible: no beams, no glowing hands, no aura, no particles, no distortion. It reads only through bodies falling the wrong way — sideways into walls, forward in waves, up into the sky."
+        }
+      };
+
+      var WAVES = {
+        5:  ["two", "two", "two", "two", "the remaining"],
+        10: ["three", "two", "three", "three", "the four remaining"]
+      };
+
+      /* ---- Dominant camera moves (Higgsfield library, adapted for combat) ---- */
+      var CAMERAS = {
+        auto: {
+          name: "Director's Mix", sub: "Aggressive action coverage",
+          lines: [
+            "Aggressive low-angle tracking shots that stay with the protagonist through every exchange.",
+            "Fast 180-degree camera orbits during throws and takedowns.",
+            "Side-tracking shots during running and acrobatic movements, tight close-ups on hand-to-hand exchanges, wide shots whenever attacks land simultaneously.",
+            "Impact-synchronized whip-pans on the biggest hits only."
+          ]
+        },
+        dolly: {
+          name: "Slow Dolly-In", sub: "Creeping push to the face",
+          lines: [
+            "One slow, steady dolly-in carries the clip: the camera glides forward at a constant creep from a wide fight frame toward the protagonist's face as the fight closes in around him.",
+            "Shallow depth of field — the background softens as we approach, opponents blurring at the edges while he stays razor sharp.",
+            "Supporting coverage stays minimal: no orbits, no drone moves — the push itself is the tension."
+          ]
+        },
+        orbit: {
+          name: "Orbital 360", sub: "Full circle hero orbit",
+          lines: [
+            "One smooth orbital move carries the clip: the camera circles a full 360 degrees around the protagonist at a constant radius while he stays dead center, fighting in every direction as the world rotates behind him.",
+            "Low angle throughout for the hero read, with the environment's lights and shapes sweeping through the background for parallax.",
+            "The orbit never speeds up, never reverses — one unbroken circle for the whole clip."
+          ]
+        },
+        fpv: {
+          name: "FPV Drone", sub: "High-speed flythrough",
+          lines: [
+            "One high-speed FPV drone move carries the clip: the camera dives and weaves through the fight space at fight height, threading between attackers and props, always returning to the protagonist.",
+            "Fast forward velocity with motion blur on passing edges, and exactly one dramatic banking turn at the midpoint so the path stays readable.",
+            "Ultra-wide lens feel — the fight fills the frame edge to edge; no static angles anywhere."
+          ]
+        },
+        crash: {
+          name: "Crash Zoom", sub: "Snap to the eyes on impact",
+          lines: [
+            "The clip plays in hard, grounded coverage — then ONE crash zoom only: on the single biggest impact, the camera snaps from wide to an extreme close-up on the protagonist's eyes with motion-blurred zoom streaks.",
+            "The crash zoom is used once per clip, on the biggest beat — overusing it kills the punch.",
+            "After the snap, coverage returns to the grounded angle and holds; no second zoom."
+          ]
+        },
+        bullet: {
+          name: "Bullet Time Arc", sub: "One frozen 180° arc",
+          lines: [
+            "Coverage is real-time and grounded — except for ONE bullet-time beat at the climax: time nearly stops on the protagonist mid-technique while the camera arcs 180 degrees around him, debris and droplets hanging motionless in the air.",
+            "The frozen arc lasts one beat only, then time snaps back to full speed for the finish — this is the clip's single permitted slow-motion moment.",
+            "Suspended particles (dust, droplets, debris) must be visible during the arc so the frozen time reads clearly."
+          ]
+        },
+        whip: {
+          name: "Whip Pan", sub: "Kinetic blur transitions",
+          lines: [
+            "Whip pans carry the clip's energy: the camera snaps sideways with heavy motion blur off each major impact, the blur streak resolving directly into the next exchange.",
+            "Every whip lands on a new angle of the same continuous fight — geography never resets between pans.",
+            "Blur is motion only: faces and the protagonist stay readable in the frames between pans."
+          ]
+        },
+        handheld: {
+          name: "Handheld Follow", sub: "Grounded documentary follow",
+          lines: [
+            "One handheld follow carries the clip: the camera tracks the protagonist from behind and beside at shoulder height, subtle weighty shake for documentary realism — never shaky-cam.",
+            "Focus racks briefly to incoming attackers, then snaps back to the protagonist; he is the constant subject.",
+            "No cranes, no drones, no orbits — the grounded follow is what makes the violence feel real."
+          ]
+        }
+      };
+
+      var SPEEDS = [
+        { value: 1, label: "1x", sub: "Natural speed" },
+        { value: 2, label: "2x", sub: "Fast & aggressive" },
+        { value: 3, label: "3x", sub: "Extreme speed" }
+      ];
+      var TAKES = [
+        { value: "continuous", label: "One Continuous Take", sub: "No cuts" },
+        { value: "beats", label: "Beat Cuts", sub: "Cut on each beat" }
+      ];
+      var LOCKS = [
+        { value: "standard", label: "Locked", sub: "Face & outfit held" },
+        { value: "ultra", label: "Ultra Lock", sub: "Face, outfit & light" }
+      ];
+      var ENDINGS = [
+        { value: "impact", label: "Cut on Impact", sub: "Freeze on the hit" },
+        { value: "open", label: "Open Ending", sub: "Built to extend" }
+      ];
+
+      var TOOL_GUIDE = {
+        Seedance: "Written for Seedance: follow the timed beats exactly, in order, at the stated seconds. Attach the protagonist as IMAGE 1 before pasting.",
+        Kling: "Written for Kling: attach the protagonist as IMAGE 1 (and the source clip as @Video1 for swaps / motion reference). Keep the negative prompt in Kling's negative field if you split it out.",
+        Minimax: "Written for Minimax: paste the full prompt as one block, reference image first. The timed beats act as the shot list — do not reorder them.",
+        Grok: "Written for Grok: paste the full prompt with your reference image attached. If Grok trims length, keep FORMAT, CHARACTER LOCK, the timed beats, and NEGATIVE PROMPT first.",
+        Flow: "Written for Flow: add the protagonist as an Ingredient / Frame reference first, then paste. Keep the same ingredient set for every extension so the character never drifts.",
+        Hedra: "Written for Hedra: lock the character once in Hedra, then reuse that same character for every clip and extension — never rebuild the character between segments."
+      };
+
+      var CONSISTENCY_LINES = [
+        "Same face in every frame: the protagonist's facial identity, hairstyle, age, and skin tone never change, morph, or drift — not between beats, not between extensions.",
+        "Same outfit in every frame: every garment, color, and accessory from the IMAGE REFERENCE stays identical and intact; no wardrobe changes, no missing items.",
+        "Same light in every frame: lighting direction, color temperature, time of day, and weather stay constant across the whole clip and every extension.",
+        "Same place in every frame: the location's layout, props, and geography never rearrange; damage and debris from earlier beats stay where they fell.",
+        "Same opponents: each opponent is a distinct person who stays down once beaten — nobody reappears, duplicates, or changes clothes."
+      ];
+
+      /* ---- Fight styles: 5 timed beats each. ctx = {w, prop, prop2, surf, veh, pow} ---- */
+      var STYLES = {
+        wingchun: {
+          name: "Wing Chun",
+          title: "THE UNSTOPPABLE DRAGON",
+          priority: "Completely different choreography from conventional kick-heavy fight scenes. Emphasize close-quarter Wing Chun combinations, simultaneous enemy attacks, creative environmental combat, spectacular throws, acrobatic transitions, and uninterrupted forward momentum.",
+          motion: "Authentic Wing Chun hand trapping, MMA transitions, realistic judo throws, explosive acrobatic kung fu, believable center of gravity, natural body momentum, accurate contact timing, realistic falls, and fluid transitions.",
+          beats: [
+            function (c) { return ["WING CHUN EXPLOSION",
+              "The fight starts instantly. " + cap(c.w) + " opponents rush simultaneously from the front and both sides. IMAGE 1 advances aggressively" + c.pow + ", deflects a right punch with a lightning-fast pak sao, delivers a rapid chain of close-range punches, traps an opponent's arm, then executes a sharp knee strike. He immediately pivots, ducks beneath another attack, and sweeps an opponent's supporting leg, sending him crashing onto " + c.surf + "."]; },
+            function (c) { return ["ENVIRONMENTAL COMBAT",
+              "An opponent attacks with a powerful swinging punch. IMAGE 1 steps inside the attack, catches his arm, rotates behind him, and uses a twisting arm-drag takedown" + (c.veh ? ". The opponent crashes onto the hood of the [Vehicle]. IMAGE 1 grabs another attacker by the jacket, spins him into a second charging opponent, causing both to collide and fall. He vaults over the hood and continues forward."
+                                                                                              : ". The opponent crashes hard against the " + c.prop + ". IMAGE 1 grabs another attacker by the jacket, spins him into a second charging opponent, causing both to collide and fall. He vaults over the " + c.prop + " and continues forward.")]; },
+            function (c) { return ["WALL RUNNING COUNTERATTACK",
+              cap(c.w) + " opponents block the way ahead. IMAGE 1 runs two steps along the side of " + (c.veh ? "the [Vehicle]" : "the " + c.prop) + ", launches sideways into a flying spinning kick, and strikes an opponent in the upper body. He lands in a low crouch, immediately performs a sweeping leg attack against another opponent, then rises into a powerful turning elbow strike against the next. All movements connect seamlessly."]; },
+            function (c) { return ["BRUTAL CLOSE-QUARTER THROWS",
+              "Two attackers grab IMAGE 1 simultaneously from opposite sides. He lowers his center of gravity, breaks their grips, spins between them, and executes a double arm-drag maneuver, throwing both in opposite directions. Another opponent charges. IMAGE 1 catches his momentum, performs a spectacular shoulder throw, and sends him crashing through the " + c.prop2 + ". Debris scatters naturally."]; },
+            function (c) { return ["DRAGON'S FINAL COMBINATION",
+              cap(c.w) + " opponents attack from multiple directions. IMAGE 1 rapidly chains a backfist, spinning elbow, low spinning sweep, and explosive jumping side kick" + c.pow + ". One opponent crashes against the " + c.prop + " while another stumbles into the remaining attackers. IMAGE 1 immediately rushes toward the final standing opponent, leaps into a powerful flying knee strike, and the camera cuts at the exact moment of impact."]; }
+          ]
+        },
+        muaythai: {
+          name: "Muay Thai",
+          title: "THE IRON ELBOW",
+          priority: "Choreography built on the eight limbs — elbows, knees, shins, and teeps — not punching combos. Emphasize the clinch as a weapon, simultaneous enemy attacks, creative environmental combat, devastating sweeps, and uninterrupted forward pressure.",
+          motion: "Authentic Muay Thai clinch work, elbow and knee mechanics, shin conditioning impacts, realistic sweeps and dumps, believable center of gravity, natural body momentum, accurate contact timing, realistic falls, and fluid transitions.",
+          beats: [
+            function (c) { return ["CLINCH AND ELBOWS",
+              "The fight starts instantly. " + cap(c.w) + " opponents rush from the front and both sides. IMAGE 1 marches straight into them" + c.pow + ", parries the first punch, locks a double collar clinch, and drives a knee into the body before spinning the man off with a horizontal elbow. He checks a wild swing on his forearm and answers with a slicing downward elbow that drops the second attacker to " + c.surf + "."]; },
+            function (c) { return ["TEEP AND LEG KICK COUNTERS",
+              "An opponent charges with a swinging punch. IMAGE 1 spears a long teep into his chest, stopping him cold and sending him stumbling back into the " + c.prop + ". A second attacker rushes in low — IMAGE 1 chops a heavy leg kick into his lead thigh, buckling the leg, then steps in with a jumping knee as the man folds."]; },
+            function (c) { return ["KNEE STORM",
+              cap(c.w) + " opponents close in together. IMAGE 1 seizes the nearest by the neck, yanks him down into two rising knees, and shoves him into the path of the others. He pivots on the ball of his foot, lands a spinning elbow, then leaps off " + (c.veh ? "the hood of the [Vehicle]" : "the " + c.prop) + " into a flying knee that flattens the last of the wave. He lands balanced, guard high."]; },
+            function (c) { return ["SWEEP AND DUMP",
+              "Two attackers grab IMAGE 1 from opposite sides. He drops his weight, breaks one grip, clinches the other man, and sweeps his legs out in a full Muay Thai dump, slamming him onto " + c.surf + ". A third charges in — IMAGE 1 catches his kick, drives forward, and dumps him backward through the " + c.prop2 + ". Debris scatters naturally."]; },
+            function (c) { return ["THE IRON FINISH",
+              cap(c.w) + " opponents attack from multiple directions. IMAGE 1 chains a teep, a spinning elbow, a low leg sweep, and a thunderous roundhouse kick to the body" + c.pow + ". One opponent crashes against the " + c.prop + " while another stumbles into the rest. IMAGE 1 rushes the final standing man, leaps into a flying knee, and the camera cuts at the exact moment of impact."]; }
+          ]
+        },
+        mma: {
+          name: "MMA / Judo Throws",
+          title: "THE GROUND WAR",
+          priority: "Choreography built on throws, takedowns, and level changes — not striking exchanges. Emphasize grip fighting, simultaneous enemy attacks, creative environmental combat, spectacular judo throws, and uninterrupted forward momentum between standing and ground transitions.",
+          motion: "Authentic judo grip fighting, MMA level changes, realistic hip and shoulder throws, believable center of gravity, natural body momentum, accurate contact timing, realistic falls and breakfalls, and fluid standing-to-ground transitions.",
+          beats: [
+            function (c) { return ["PRESSURE AND TAKEDOWN",
+              "The fight starts instantly. " + cap(c.w) + " opponents rush from the front and both sides. IMAGE 1 shoots under the first punch" + c.pow + ", locks a body clinch, and drives a double-leg takedown that slams the man onto " + c.surf + ". He pops straight back to his feet, parries the second attacker, and snaps him down face-first with a collar drag."]; },
+            function (c) { return ["ARM-DRAG TO HIP THROW",
+              "An opponent swings a powerful overhand. IMAGE 1 steps inside, catches the arm, and arm-drags him straight past into the " + c.prop + ". Before the man recovers, IMAGE 1 turns in, loads him onto his hip, and launches a full hip throw — the opponent lands flat and hard, and IMAGE 1 is already moving forward."]; },
+            function (c) { return ["ENVIRONMENTAL TAKEDOWNS",
+              cap(c.w) + " opponents block the way ahead. IMAGE 1 feints high, drops levels, and blast-doubles the first man backward into " + (c.veh ? "the side of the [Vehicle]" : "the " + c.prop2) + ". He spins off the impact, catches the second man's charge, and trips him over the fallen body. The third eats a snap-down into a front headlock throw and crashes to " + c.surf + "."]; },
+            function (c) { return ["DOUBLE THROW CHAOS",
+              "Two attackers grab IMAGE 1 simultaneously from opposite sides. He lowers his center of gravity, breaks their grips, spins between them, and executes a double arm-drag maneuver, throwing both in opposite directions. A third opponent charges. IMAGE 1 catches his momentum, performs a spectacular shoulder throw, and sends him crashing through the " + c.prop2 + ". Debris scatters naturally."]; },
+            function (c) { return ["THE FINAL SLAM",
+              cap(c.w) + " opponents attack from multiple directions. IMAGE 1 chains a trip, a spinning arm-drag, a low single-leg sweep, and a lifting suplex-style slam" + c.pow + ". One opponent crashes against the " + c.prop + " while another stumbles into the remaining attackers. IMAGE 1 rushes the final standing opponent, lifts him clean off his feet, and the camera cuts at the exact moment of the slam's impact."]; }
+          ]
+        },
+        capoeira: {
+          name: "Capoeira",
+          title: "THE SPINNING STORM",
+          priority: "Choreography built on flow, rhythm, and acrobatics — the fight never stops moving and never plants both feet. Emphasize ginga footwork, spinning kicks, cartwheel evasions, simultaneous enemy attacks, creative environmental combat, and uninterrupted circular momentum.",
+          motion: "Authentic capoeira ginga, spinning kick mechanics, cartwheel and handstand transitions, believable rotation and center of gravity, natural body momentum, accurate contact timing, realistic falls, and seamless acrobatic flow.",
+          beats: [
+            function (c) { return ["GINGA OPENING",
+              "The fight starts instantly, already in motion. IMAGE 1 rocks in the ginga as " + c.w + " opponents rush from the front and both sides" + c.pow + ". He drops under the first punch into a low negativa, sweeps the man's legs, and rolls straight up into a spinning armada kick that catches the second attacker across the chest, sending him down onto " + c.surf + "."]; },
+            function (c) { return ["SPINNING KICK FLOW",
+              "An opponent charges with a swinging punch. IMAGE 1 cartwheels clean over the strike — an aú that flows directly into a martelo kick striking the man in the ribs and folding him against the " + c.prop + ". Without pausing, he chains a meia-lua de frente, the heel whipping around to drop the next attacker mid-rush."]; },
+            function (c) { return ["CARTWHEEL COUNTERS",
+              cap(c.w) + " opponents block the way ahead. IMAGE 1 launches off " + (c.veh ? "the hood of the [Vehicle]" : "the " + c.prop) + " into a handstand spin, legs scissoring — one heel strikes an opponent high, the other sweeps the second low. He lands in a crouch, immediately performs a rasteira leg sweep against the third, and flows upright without breaking rhythm."]; },
+            function (c) { return ["ACROBATIC SWEEPS",
+              "Two attackers grab for IMAGE 1 from opposite sides. He drops between their hands, spins on one palm, and his rotating legs sweep both men off their feet in opposite directions. A third charges in — IMAGE 1 springs from the crouch into a macaco backflip over the rush and lands behind him, sweeping him through the " + c.prop2 + " as he turns. Debris scatters naturally."]; },
+            function (c) { return ["THE SPINNING FINISH",
+              cap(c.w) + " opponents attack from multiple directions. IMAGE 1 chains a spinning armada, a cartwheel evasion, a low rasteira sweep, and an explosive jumping meia-lua kick" + c.pow + ". One opponent crashes against the " + c.prop + " while another stumbles into the remaining attackers. IMAGE 1 rushes the final standing opponent, launches into a flying spinning kick, and the camera cuts at the exact moment of impact."]; }
+          ]
+        },
+        kravmaga: {
+          name: "Krav Maga",
+          title: "THE LAST MAN STANDING",
+          priority: "Choreography built on brutal efficiency — every exchange ends in under three moves, no wasted motion, no showmanship. Emphasize simultaneous defense and counterattack, creative environmental combat, vicious takedowns, and relentless forward aggression until no threat remains standing.",
+          motion: "Authentic Krav Maga simultaneous defense-and-counter, realistic combatives, believable center of gravity, natural body momentum, accurate contact timing, realistic falls, improvised environmental use, and zero wasted movement between exchanges.",
+          beats: [
+            function (c) { return ["INSTANT COUNTERATTACK",
+              "The fight starts instantly. " + cap(c.w) + " opponents rush from the front and both sides. IMAGE 1 explodes forward" + c.pow + " — a palm strike and knee land on the first man in the same instant his punch is deflected. He shoves the folding attacker into the second, then hammers the third with a burst of elbows and drives him down onto " + c.surf + ". No pause. No reset."]; },
+            function (c) { return ["ENVIRONMENTAL WEAPONS",
+              "An opponent attacks with a powerful swinging punch. IMAGE 1 blocks inside, traps the arm, and drives the man face-first into the " + c.prop + ". He rips a loose piece of the " + c.prop2 + " free as an improvised shield, smashes it across the next charging attacker, and discards it — already moving, already on the next threat."]; },
+            function (c) { return ["SIMULTANEOUS DEFENSE",
+              cap(c.w) + " opponents close in together. IMAGE 1 strikes the nearest in the throat-line with a hammer fist while his other arm blocks the second man's swing, then kicks the third low and hard in the leg, buckling him. He vaults " + (c.veh ? "across the hood of the [Vehicle]" : "over the " + c.prop) + " and lands already throwing — a spinning backfist that flattens the last of the wave."]; },
+            function (c) { return ["BRUTAL TAKEDOWNS",
+              "Two attackers grab IMAGE 1 simultaneously from opposite sides. He drops his weight, rips both grips free with violent rotations, and drives each man into the ground in opposite directions with arm-wrench takedowns. A third charges — IMAGE 1 meets him head-on, clinches, and hurls him through the " + c.prop2 + ". Debris scatters naturally."]; },
+            function (c) { return ["NO SECOND CHANCES",
+              cap(c.w) + " opponents attack from multiple directions. IMAGE 1 chains a hammer fist, a spinning elbow, a low leg stomp sweep, and an explosive jumping knee" + c.pow + ". One opponent crashes against the " + c.prop + " while another stumbles into the remaining attackers. IMAGE 1 rushes the final standing opponent, seizes him, and the camera cuts at the exact moment of the finishing takedown's impact."]; }
+          ]
+        }
+      };
+
+      var EXT_BEATS = [
+        function (c) { return ["THE FIGHT ESCALATES",
+          "Seamless continuation — no cut, no reset. More opponents pour in from the far end of the scene and charge. IMAGE 1 meets them head-on" + c.pow + ", chaining close-range strikes, a spinning elbow, and a driving takedown that slams the lead attacker onto " + c.surf + ". He never stops moving forward."]; },
+        function (c) { return ["SECOND WAVE COLLAPSE",
+          "The second wave surrounds IMAGE 1 against the " + c.prop + ". He explodes off it — a flying strike drops the first man, a leg sweep drops the second, and a full shoulder throw sends the third crashing through the " + c.prop2 + ". Debris scatters naturally as he lands in a low, ready stance."]; },
+        function (c) { return ["NO RETREAT",
+          "Attackers rush from both sides at once. IMAGE 1 drops his center of gravity, breaks both attacks in a single rotation, and counters with a rapid chain of strikes" + c.pow + " — each opponent falls in sequence, none of them laying a clean hand on him. He advances through the gap without breaking stride."]; },
+        function (c) { return ["THE PURSUIT",
+          "The remaining opponents scatter and regroup at distance. IMAGE 1 pursues relentlessly, vaulting " + (c.veh ? "over the [Vehicle]" : "over the " + c.prop) + ", closing the distance in seconds, and cutting off the first man with a spinning strike that sends him into the others. The momentum never drops."]; },
+        function (c) { return ["FINAL STAND",
+          "Every remaining opponent attacks at once in a final desperate rush. IMAGE 1 chains his fastest combination of the entire fight — backfist, elbow, sweep, and a leaping finishing strike" + c.pow + ". Bodies fall in every direction. IMAGE 1 lands dead center, breathing hard, scanning for the next threat as the camera pushes in and cuts to black."]; }
+      ];
+
+      /* ---- Gravity extension beats: the chaos escalates, the Main Character never stops walking ---- */
+      var GRAVITY_EXT_BEATS = [
+        function (c) { return ["THE SECOND SURGE",
+          "Seamless continuation — no cut, no reset. A fresh wave of attackers pours in from the far end of the street and charges. Halfway to the Main Character (IMAGE 1), every one of them falls straight up at once, ripped off the ground and accelerating into the sky, weapons and hats raining back down under normal gravity. The Main Character walks through the falling debris without looking up."]; },
+        function (c) { return ["HUMAN WEATHER",
+          "The orbiting bodies tighten into a fast ring around the Main Character, then he releases them in every direction at once — they blast outward sideways, forward, backward, and up, slamming into walls, the ground, and each other. A second group still on its feet slides diagonally across the street in one helpless mass, scraping and colliding. Still no visible effect of any kind — only bodies, moving wrong."]; },
+        function (c) { return ["THE WHIRLPOOL",
+          "Dozens of new attackers rush from both ends of the street simultaneously. Mid-charge, their gravity rotates in a spiral — they sweep off their feet and whirl around the Main Character in a tightening human whirlpool, orbiting faster and faster, none of them ever touching him. He keeps his exact walking pace through the center of it, calm, eyes forward."]; },
+        function (c) { return ["THE SECOND SNAP",
+          "The whirlpool flings its bodies outward and up — then normal gravity snaps back for the entire crowd at the same instant. Hundreds drop straight down simultaneously and slam into the street in one earth-shaking impact, dust blasting outward. The Main Character walks out of the dust mid-stride, untouched, still no victory pose, no look back — the action is left open, ready to continue."]; }
+      ];
+
+      /* ---- The Main Character gravity prompt: hand-written, director-grade. Tool name comes from the current selection. ---- */
+      function mainCharacterPrompt() {
+        var lines = [];
+        lines.push(state.tool.toUpperCase() + " — MAIN CHARACTER | SELECTIVE DIRECTIONAL GRAVITY");
+        lines.push("");
+        lines.push("FORMAT: 10 seconds | 16:9 widescreen landscape | Ultra-photorealistic live-action | 3x action speed | One single continuous take — no cuts | No slow motion anywhere in the clip.");
+        lines.push("");
+        lines.push("CHARACTER LOCK — MAIN CHARACTER (IMAGE 1)");
+        lines.push("");
+        lines.push("Use IMAGE 1 as the Main Character. Preserve 100% exact facial identity, hairstyle, outfit, body proportions, and physical appearance from the reference photo in every single frame. Nothing about the Main Character's appearance changes — same face, same hair, same outfit, same build from the first frame to the last. The Main Character is calm for the entire clip — relaxed walking pace, loose posture, no fighting stance, no hand gestures, no visible effort, no victory pose. He simply keeps walking forward through the chaos from the first frame to the last, and the clip ends mid-stride on an open ending so the action can continue seamlessly into the next clip.");
+        lines.push("");
+        lines.push("THE POWER — THE WHOLE POINT OF THE SCENE");
+        lines.push("");
+        lines.push("\"The Main Character possesses terrifying selective directional gravity manipulation. The Main Character does NOT shoot energy and does NOT visibly generate magic. He simply changes the direction of gravity affecting specifically selected attackers.\"");
+        lines.push("");
+        lines.push("There are NO visible effects of any kind: no beams, no energy blasts, no glowing hands, no aura, no runes, no particles, no shockwave rings, no air distortion, no light of any color. Nothing ever leaves the Main Character's body and nothing appears around him. The horror is purely physical — people suddenly falling the wrong way. Every selected body falls with full real-world physics, just in the wrong direction: real acceleration, real tumbling, real weight, real collisions. Attackers the Main Character has NOT selected, plus bystanders, loose objects, clothing, and hair, all obey completely normal gravity at all times. The Main Character himself is never affected by any gravity change.");
+        lines.push("");
+        lines.push("SETTING: A crowded city street, attackers pouring in from every side — dozens at first, building to hundreds. The crowd is armed with rage, not weapons of war: they charge on foot, shouting, closing in on the one calm man walking through the middle of them.");
+        lines.push("");
+        lines.push("CONTINUOUS ACTION — ONE TAKE, NO PAUSES, NO CUTS");
+        lines.push("");
+        lines.push("0–1s | THE FIRST ONE");
+        lines.push("");
+        lines.push("The crowd surges toward the Main Character. The nearest attacker, mid-charge, suddenly falls SIDEWAYS — horizontally, at full gravity speed — and slams into the wall beside him. No push, no impact, no visible cause. The man simply fell the wrong way. The Main Character does not react. He keeps walking.");
+        lines.push("");
+        lines.push("1–2.5s | THE SIDEWAYS WAVE");
+        lines.push("");
+        lines.push("Forty to sixty attackers fall sideways at the exact same instant, ripped horizontally off their feet in one direction, crashing into walls, into each other, and across the street in a single violent wave. Screams cut short on impact. The Main Character walks through the gap they leave, untouched, pace unchanged.");
+        lines.push("");
+        lines.push("2.5–4s | DOMINOES");
+        lines.push("");
+        lines.push("A fresh rank of attackers charges — and falls FORWARD like dominoes, the whole wave pitching face-first in sequence down the street, each man knocked into the next, bodies piling and sliding. The fall travels through the crowd like a wave through wheat. The Main Character steps calmly over the edge of it and keeps going.");
+        lines.push("");
+        lines.push("4–5.5s | FALLING UP");
+        lines.push("");
+        lines.push("A group of attackers nearest to the Main Character falls UP — straight off the ground and accelerating into the sky, screaming, arms windmilling, shrinking upward. Hats and loose objects stay on the ground under normal gravity; only the selected men rise. The Main Character never looks up.");
+        lines.push("");
+        lines.push("5.5–7s | THE ORBIT");
+        lines.push("");
+        lines.push("The airborne attackers stop rising and swing into orbit around the Main Character — dozens of bodies circling him in a slow, terrifying ring as he walks, like moons around a planet, none of them touching him, all of them conscious and panicking. The ring travels with him down the street, holding its distance perfectly.");
+        lines.push("");
+        lines.push("7–8s | EVERY DIRECTION AT ONCE");
+        lines.push("");
+        lines.push("Dozens more attackers fall in EVERY direction at the same moment — left, right, forward, backward, and straight up — a full sphere of wrong-way falling exploding outward around the Main Character while the orbiting ring still turns above the chaos. There is no safe direction left in the street. The Main Character walks through the center of it.");
+        lines.push("");
+        lines.push("8–9s | THE DIAGONAL SLIDE");
+        lines.push("");
+        lines.push("Every attacker still on their feet loses the ground together — the entire remaining crowd slides DIAGONALLY across the street in one direction as one helpless mass, scraping along the pavement, colliding, piling against the far wall. One direction. One motion. Total helplessness.");
+        lines.push("");
+        lines.push("9–10s | GRAVITY SNAPS BACK");
+        lines.push("");
+        lines.push("Normal gravity returns for everyone at the exact same instant. HUNDREDS of airborne attackers — the orbiters, the risers, all of them — drop straight down simultaneously and slam into the street in a single earth-shaking impact, dust blasting outward in a ring. The Main Character walks out of the dust mid-stride, calm, untouched, no victory pose, no look back. The clip ends on his walk — open ending, ready to continue.");
+        lines.push("");
+        lines.push("CAMERA DIRECTION");
+        lines.push("");
+        lines.push("- ONE DOMINANT MOVE RULE: one camera move carries the entire clip — the backward-tracking follow below. No second move is introduced, ever.");
+        lines.push("- One single continuous take for the full 10 seconds — the camera never cuts, never jumps, never resets.");
+        lines.push("- Smooth backward-tracking shot ahead of the Main Character, keeping him centered and full-body in frame as he walks toward camera through the chaos.");
+        lines.push("- Subtle, weighty handheld feel — grounded and real, never shaky-cam.");
+        lines.push("- The camera tilts up only slightly as bodies fall into the sky, then settles back to the Main Character — he is always the calm center of the frame.");
+        lines.push("- At the final snap-back, a single hard camera shudder on the mass impact — then steady again on the Main Character walking.");
+        lines.push("- 3x action speed applies to the falling, the impacts, and the crowd — the Main Character's own walk stays eerily natural inside it.");
+        lines.push("");
+        lines.push("MOTION AND PHYSICS");
+        lines.push("");
+        lines.push("Every fall obeys real gravity and real physics — acceleration, tumbling, momentum, collision, and rebound — with only the DIRECTION changed, and only for the attackers the Main Character selects. Bodies that fall sideways travel horizontally until something stops them. Bodies that fall up keep accelerating upward. The orbit holds consistent distance and speed. The final drop is perfectly simultaneous across hundreds of bodies. No floating, no drifting, no weightlessness — wrong-way gravity is still gravity: fast, heavy, and final.");
+        lines.push("");
+        lines.push("VISUAL AND AUDIO");
+        lines.push("");
+        lines.push("Ultra-photorealistic live-action, detailed facial panic on the attackers, calm detailed expression on the Main Character, natural skin texture, realistic clothing and hair physics under both normal and redirected gravity, cinematic street lighting, crisp environmental detail.");
+        lines.push("");
+        lines.push("Audio: raw crowd panic — screaming, shouting, scrambling — body impacts on walls and pavement, the skidding scrape of the diagonal slide, one low deep hum underneath the entire clip, and the final mass impact as a single massive ground-shaking slam. No music. No dialogue. No narration.");
+        lines.push("");
+        lines.push("CONSISTENCY & CONTINUITY");
+        lines.push("");
+        CONSISTENCY_LINES.forEach(function (l) { lines.push("- " + l); });
+        lines.push("- Main Character continuity is absolute: same face, same hairstyle, same outfit, and same physical appearance from IMAGE 1 — identical in the first frame, the last frame, and every extension.");
+        lines.push("");
+        lines.push("NEGATIVE PROMPT");
+        lines.push("");
+        lines.push("No energy beams, no energy blasts, no glowing hands, no glowing eyes, no aura, no magic circles, no runes, no particles, no shockwaves, no air distortion, no telekinesis gestures, no hand-waving, no visible power source of any kind. No slow motion, no speed ramping on the Main Character, no cuts, no camera jumps, no teleportation, no duplicated or morphing people, no distorted limbs, no face changes, no outfit changes, no floating or weightless drift, no cartoon physics, no victory pose, no posing for camera, no text, no subtitles, no logos, no watermarks, no music, no blood, no gore.");
+        lines.push("");
+        lines.push("HIGHEST PRIORITY: The power must stay completely invisible. If anything glows, beams, radiates, or looks magical, the scene has failed. The only thing the audience ever sees is a calm man walking — and the whole world falling the wrong way around him.");
+        return lines.join("\n");
+      }
+
+      /* ================= STATE ================= */
+
+      var state = {
+        mode: "action",
+        tool: "Seedance",
+        duration: 10,
+        aspect: "16:9",
+        opponents: 10,
+        env: "street",
+        daynight: "Night",
+        weather: "Dry",
+        outfit: "regular",
+        style: "wingchun",
+        power: "none",
+        camera: "auto",
+        speed: 1,
+        take: "continuous",
+        lock: "ultra",
+        ending: "impact",
+        addons: { person: false, place: false, thing: false, vehicle: false, environment: true },
+        media: { music: false, dialogue: false, subtitles: false, text: false, logos: false },
+        compact: false
+      };
+
+      var forged = null; /* { text, totalSeconds, extensions } */
+      var swapText = "";
+
+      /* ================= HELPERS ================= */
+
+      function $(id) { return document.getElementById(id); }
+      function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+      function toast(el, msg) {
+        el.textContent = msg;
+        if (msg) { setTimeout(function () { if (el.textContent === msg) el.textContent = ""; }, 3200); }
+      }
+
+      function copyText(text, el, msg) {
+        function done() { toast(el, msg || "Copied — paste it straight into your tool."); }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, function () { fallback(); });
+        } else { fallback(); }
+        function fallback() {
+          var ta = document.createElement("textarea");
+          ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+          document.body.appendChild(ta); ta.select();
+          try { document.execCommand("copy"); done(); } catch (e) { toast(el, "Copy blocked — long-press the text to copy it manually."); }
+          document.body.removeChild(ta);
+        }
+      }
+
+      function downloadText(text, filename) {
+        var blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 800);
+      }
+
+      /* ================= CONTROL BUILDERS ================= */
+
+      function buildSeg(id, items, get, set) {
+        var host = $(id);
+        host.innerHTML = "";
+        items.forEach(function (item) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.setAttribute("aria-pressed", String(get() === item.value));
+          b.innerHTML = item.label + (item.sub ? '<span class="sub">' + item.sub + "</span>" : "");
+          b.addEventListener("click", function () { set(item.value); refresh(); });
+          host.appendChild(b);
+        });
+      }
+
+      function paintSeg(id, items, current) {
+        var host = $(id), btns = host.children;
+        for (var i = 0; i < btns.length; i++) {
+          btns[i].setAttribute("aria-pressed", String(items[i].value === current));
+        }
+      }
+
+      var toolItems = TOOLS.map(function (t) { return { value: t, label: t }; });
+      var durItems = DURATIONS.map(function (d) { return { value: d, label: d + " sec" }; });
+      var aspectItems = ASPECTS.map(function (a) { return { value: a.id, label: a.label, sub: a.sub }; });
+      var oppItems = OPPONENTS.map(function (n) { return { value: n, label: "1 vs " + n }; });
+      var envItems = Object.keys(ENVIRONMENTS).map(function (k) { return { value: k, label: ENVIRONMENTS[k].name }; });
+      var dnItems = [{ value: "Day", label: "☀ Day" }, { value: "Night", label: "☾ Night" }];
+      var wxItems = [{ value: "Dry", label: "Dry" }, { value: "Rain", label: "Rain" }];
+      var outfitItems = Object.keys(OUTFITS).map(function (k) { return { value: k, label: OUTFITS[k].name }; });
+      var styleItems = Object.keys(STYLES).map(function (k) { return { value: k, label: STYLES[k].name }; });
+      var powerItems = Object.keys(POWERS).map(function (k) { return { value: k, label: POWERS[k].name, sub: POWERS[k].sub }; });
+      var cameraItems = Object.keys(CAMERAS).map(function (k) { return { value: k, label: CAMERAS[k].name, sub: CAMERAS[k].sub }; });
+      var speedItems = SPEEDS.map(function (s) { return { value: s.value, label: s.label, sub: s.sub }; });
+      var takeItems = TAKES.map(function (t) { return { value: t.value, label: t.label, sub: t.sub }; });
+      var lockItems = LOCKS.map(function (l) { return { value: l.value, label: l.label, sub: l.sub }; });
+      var endingItems = ENDINGS.map(function (e) { return { value: e.value, label: e.label, sub: e.sub }; });
+
+      buildSeg("seg-tool", toolItems, function () { return state.tool; }, function (v) { state.tool = v; });
+      buildSeg("seg-duration", durItems, function () { return state.duration; }, function (v) { state.duration = v; });
+      buildSeg("seg-aspect", aspectItems, function () { return state.aspect; }, function (v) { state.aspect = v; });
+      buildSeg("seg-opponents", oppItems, function () { return state.opponents; }, function (v) { state.opponents = v; });
+      buildSeg("seg-env", envItems, function () { return state.env; }, function (v) { state.env = v; });
+      buildSeg("seg-daynight", dnItems, function () { return state.daynight; }, function (v) { state.daynight = v; });
+      buildSeg("seg-weather", wxItems, function () { return state.weather; }, function (v) { state.weather = v; });
+      buildSeg("seg-outfit", outfitItems, function () { return state.outfit; }, function (v) { state.outfit = v; });
+      buildSeg("seg-style", styleItems, function () { return state.style; }, function (v) { state.style = v; });
+      buildSeg("seg-power", powerItems, function () { return state.power; }, function (v) { state.power = v; });
+      buildSeg("seg-camera", cameraItems, function () { return state.camera; }, function (v) { state.camera = v; });
+      buildSeg("seg-speed", speedItems, function () { return state.speed; }, function (v) { state.speed = v; });
+      buildSeg("seg-take", takeItems, function () { return state.take; }, function (v) { state.take = v; });
+      buildSeg("seg-lock", lockItems, function () { return state.lock; }, function (v) { state.lock = v; });
+      buildSeg("seg-ending", endingItems, function () { return state.ending; }, function (v) { state.ending = v; });
+
+      /* Add-on Yes/No rows */
+      var ADDONS = [
+        { key: "person", name: "Person", on: "[Person]", off: "left out" },
+        { key: "place", name: "Place", on: "[Place]", off: "left out" },
+        { key: "thing", name: "Thing", on: "[Thing]", off: "left out" },
+        { key: "vehicle", name: "Vehicle", on: "[Vehicle]", off: "left out" },
+        { key: "environment", name: "Environment", on: "[ENV]", off: "[No]" }
+      ];
+      var addonHost = $("addons");
+      ADDONS.forEach(function (a) {
+        var row = document.createElement("div");
+        row.className = "addon";
+        row.innerHTML =
+          '<div class="who"><strong>' + a.name + '</strong><code data-code="' + a.key + '"></code></div>' +
+          '<div class="yn" role="group" aria-label="' + a.name + ' yes or no">' +
+          '<button type="button" data-k="' + a.key + '" data-v="yes">Yes</button>' +
+          '<button type="button" data-k="' + a.key + '" data-v="no">No</button></div>';
+        addonHost.appendChild(row);
+      });
+      addonHost.addEventListener("click", function (e) {
+        var b = e.target.closest("button[data-k]");
+        if (!b) return;
+        state.addons[b.getAttribute("data-k")] = b.getAttribute("data-v") === "yes";
+        refresh();
+      });
+
+      function paintAddons() {
+        ADDONS.forEach(function (a) {
+          var on = state.addons[a.key];
+          var code = addonHost.querySelector('code[data-code="' + a.key + '"]');
+          code.textContent = on ? a.on : a.off;
+          code.classList.toggle("off", !on);
+          var btns = addonHost.querySelectorAll('button[data-k="' + a.key + '"]');
+          btns.forEach(function (b) {
+            b.setAttribute("aria-pressed", String((b.getAttribute("data-v") === "yes") === on));
+          });
+        });
+      }
+
+      /* Sound & screen Yes/No rows */
+      var MEDIA = [
+        { key: "music", name: "Music" },
+        { key: "dialogue", name: "Dialogue", sub: "one short sentence" },
+        { key: "subtitles", name: "Subtitles" },
+        { key: "text", name: "Text", sub: "on-screen title" },
+        { key: "logos", name: "Logos", sub: "corner watermark" }
+      ];
+      var mediaHost = $("media");
+      MEDIA.forEach(function (m) {
+        var row = document.createElement("div");
+        row.className = "addon";
+        row.innerHTML =
+          '<div class="who"><strong>' + m.name + (m.sub ? ' <span style="color:var(--muted2); font-size:12px; font-weight:700">· ' + m.sub + "</span>" : "") + '</strong><code data-mcode="' + m.key + '"></code></div>' +
+          '<div class="yn" role="group" aria-label="' + m.name + ' yes or no">' +
+          '<button type="button" data-mk="' + m.key + '" data-v="yes">Yes</button>' +
+          '<button type="button" data-mk="' + m.key + '" data-v="no">No</button></div>';
+        mediaHost.appendChild(row);
+      });
+      mediaHost.addEventListener("click", function (e) {
+        var b = e.target.closest("button[data-mk]");
+        if (!b) return;
+        state.media[b.getAttribute("data-mk")] = b.getAttribute("data-v") === "yes";
+        refresh();
+      });
+
+      function paintMedia() {
+        MEDIA.forEach(function (m) {
+          var on = state.media[m.key];
+          var code = mediaHost.querySelector('code[data-mcode="' + m.key + '"]');
+          code.textContent = on ? "in the prompt" : "kept out";
+          code.classList.toggle("off", !on);
+          var btns = mediaHost.querySelectorAll('button[data-mk="' + m.key + '"]');
+          btns.forEach(function (b) {
+            b.setAttribute("aria-pressed", String((b.getAttribute("data-v") === "yes") === on));
+          });
+        });
+        $("dialogue-wrap").classList.toggle("hidden", !state.media.dialogue);
+      }
+
+      /* ================= SUMMARY / REFRESH ================= */
+
+      function summaryChips() {
+        var chips = [
+          state.tool, state.duration + "s", state.aspect,
+          "1 vs " + state.opponents,
+          ENVIRONMENTS[state.env].name, state.daynight, state.weather,
+          OUTFITS[state.outfit].name, STYLES[state.style].name, POWERS[state.power].name,
+          CAMERAS[state.camera].name, state.speed + "x speed",
+          state.take === "continuous" ? "One take" : "Beat cuts",
+          state.lock === "ultra" ? "Ultra Lock" : "Locked",
+          state.ending === "open" ? "Open ending" : "Cut on impact"
+        ];
+        if (state.addons.vehicle) chips.push("[Vehicle]");
+        if (state.addons.person) chips.push("[Person]");
+        if (state.addons.place) chips.push("[Place]");
+        if (state.addons.thing) chips.push("[Thing]");
+        chips.push(state.addons.environment ? "[ENV]" : "[No]");
+        if (state.media.music) chips.push("Music");
+        if (state.media.dialogue) chips.push("Dialogue");
+        if (state.media.subtitles) chips.push("Subtitles");
+        if (state.media.text) chips.push("On-screen text");
+        if (state.media.logos) chips.push("Logo");
+        if (state.compact) chips.push("Compact");
+        return chips;
+      }
+
+      function refresh() {
+        paintSeg("seg-tool", toolItems, state.tool);
+        paintSeg("seg-duration", durItems, state.duration);
+        paintSeg("seg-aspect", aspectItems, state.aspect);
+        paintSeg("seg-opponents", oppItems, state.opponents);
+        paintSeg("seg-env", envItems, state.env);
+        paintSeg("seg-daynight", dnItems, state.daynight);
+        paintSeg("seg-weather", wxItems, state.weather);
+        paintSeg("seg-outfit", outfitItems, state.outfit);
+        paintSeg("seg-style", styleItems, state.style);
+        paintSeg("seg-power", powerItems, state.power);
+        paintSeg("seg-camera", cameraItems, state.camera);
+        paintSeg("seg-speed", speedItems, state.speed);
+        paintSeg("seg-take", takeItems, state.take);
+        paintSeg("seg-lock", lockItems, state.lock);
+        paintSeg("seg-ending", endingItems, state.ending);
+        paintAddons();
+        paintMedia();
+        $("val-tool").textContent = state.tool;
+        $("val-duration").textContent = state.duration + " seconds";
+        $("val-aspect").textContent = state.aspect === "16:9" ? "16:9 widescreen" : "9:16 vertical";
+        $("val-opponents").textContent = "1 vs " + state.opponents;
+        $("val-env").textContent = ENVIRONMENTS[state.env].name;
+        $("val-daynight").textContent = state.daynight;
+        $("val-weather").textContent = state.weather;
+        $("val-outfit").textContent = OUTFITS[state.outfit].name;
+        $("val-style").textContent = STYLES[state.style].name;
+        $("val-power").textContent = POWERS[state.power].name;
+        $("val-camera").textContent = CAMERAS[state.camera].name;
+        $("val-speed").textContent = state.speed + "x" + (state.speed === 1 ? " — natural" : state.speed === 2 ? " — fast" : " — extreme");
+        $("val-take").textContent = state.take === "continuous" ? "One continuous take" : "Beat cuts";
+        $("val-lock").textContent = state.lock === "ultra" ? "Ultra Lock" : "Locked";
+        $("val-ending").textContent = state.ending === "open" ? "Open ending" : "Cut on impact";
+        $("summary-strip").innerHTML = summaryChips().map(function (c) { return "<span>" + c + "</span>"; }).join("");
+      }
+
+      /* ================= PROMPT FORGE ================= */
+
+      function makeCtx(beatIdx) {
+        var env = ENVIRONMENTS[state.env];
+        return {
+          w: WAVES[state.opponents][beatIdx],
+          prop: env.prop,
+          prop2: env.prop2,
+          surf: env.surface,
+          veh: state.addons.vehicle,
+          pow: POWERS[state.power].flourish
+        };
+      }
+
+      function addonTokens() {
+        var t = [];
+        if (state.addons.person) t.push("[Person]");
+        if (state.addons.place) t.push("[Place]");
+        if (state.addons.thing) t.push("[Thing]");
+        if (state.addons.vehicle) t.push("[Vehicle]");
+        t.push(state.addons.environment ? "[ENV]" : "[No]");
+        return t;
+      }
+
+      /* ================= COMPACT MODE ================= */
+      var KLING_CAP = 2500;
+
+      var COMPACT_PHYSICS = {
+        none: "believable human limits",
+        speed: "superhuman speed, grounded weight and real contact",
+        strength: "superhuman strength, real impact and environmental damage",
+        agility: "enhanced agility, honest takeoff / rotation / landing",
+        reflexes: "lightning reflexes, last-inch evasion and instant counters",
+        gravity: "selective directional gravity, real physics — direction only changed, power fully invisible"
+      };
+
+      /* One short line per beat: action + object. Time range is added by the forge. */
+      var COMPACT_BEATS = {
+        wingchun: [
+          function (c) { return "Wing Chun explosion — pak sao, chain punches, arm trap + knee, leg sweep onto " + c.surf; },
+          function (c) { return c.veh ? "Environmental combat — arm-drag onto [Vehicle] hood, spin attacker into another, vault the hood" : "Environmental combat — arm-drag into the " + c.prop + ", spin attacker into another, vault the " + c.prop; },
+          function (c) { return "Wall run — run up " + (c.veh ? "the [Vehicle]" : "the " + c.prop) + ", flying spinning kick, low sweep, turning elbow"; },
+          function (c) { return "Close throws — double arm-drag throws opposite ways, shoulder throw through the " + c.prop2; },
+          function (c) { return "Final combo — backfist, spinning elbow, low sweep, jumping side kick, flying knee"; }
+        ],
+        muaythai: [
+          function (c) { return "Clinch & elbows — collar clinch, knee to body, spinning elbow, downward elbow onto " + c.surf; },
+          function (c) { return "Teep & leg kick — teep into the " + c.prop + ", heavy leg kick, jumping knee"; },
+          function (c) { return "Knee storm — clinch knees, spinning elbow, flying knee off " + (c.veh ? "the [Vehicle] hood" : "the " + c.prop); },
+          function (c) { return "Sweep & dump — clinch sweep slam onto " + c.surf + ", catch kick, dump through the " + c.prop2; },
+          function (c) { return "Iron finish — teep, spinning elbow, leg sweep, roundhouse kick, flying knee"; }
+        ],
+        mma: [
+          function (c) { return "Pressure takedown — shoot under punch, double-leg slam onto " + c.surf + ", collar drag face-first"; },
+          function (c) { return "Arm-drag to hip throw — arm-drag into the " + c.prop + ", full hip throw"; },
+          function (c) { return "Environmental takedowns — blast double into " + (c.veh ? "the [Vehicle]" : "the " + c.prop2) + ", trip over fallen body, snap-down throw"; },
+          function (c) { return "Double throw — double arm-drag throws opposite ways, shoulder throw through the " + c.prop2; },
+          function (c) { return "Final slam — trip, arm-drag, low sweep, lifting slam"; }
+        ],
+        capoeira: [
+          function (c) { return "Ginga opening — negativa leg sweep, roll up, spinning armada kick"; },
+          function (c) { return "Spinning flow — cartwheel over punch, martelo kick into the " + c.prop + ", meia-lua kick"; },
+          function (c) { return "Cartwheel counters — handstand spin off " + (c.veh ? "the [Vehicle] hood" : "the " + c.prop) + ", heel strike + sweep, rasteira sweep"; },
+          function (c) { return "Acrobatic sweeps — palm-spin double sweep, macaco backflip, sweep through the " + c.prop2; },
+          function (c) { return "Spinning finish — armada, cartwheel evasion, rasteira, jumping meia-lua, flying spinning kick"; }
+        ],
+        kravmaga: [
+          function (c) { return "Instant counter — palm strike + knee, shove attacker into the next, elbow burst onto " + c.surf; },
+          function (c) { return "Environmental weapons — block + trap, drive attacker into the " + c.prop + ", improvised shield from the " + c.prop2; },
+          function (c) { return "Simultaneous defense — hammer fist + block, low leg kick, vault " + (c.veh ? "the [Vehicle] hood" : "the " + c.prop) + ", spinning backfist"; },
+          function (c) { return "Brutal takedowns — rip both grips, arm-wrench takedowns opposite ways, hurl attacker through the " + c.prop2; },
+          function (c) { return "No second chances — hammer fist, spinning elbow, leg stomp sweep, jumping knee"; }
+        ]
+      };
+
+      var COMPACT_EXT_BEATS = [
+        function (c) { return "Escalation — more attackers pour in, close strikes, spinning elbow, driving takedown onto " + c.surf; },
+        function (c) { return "Second wave — explode off the " + c.prop + ", flying strike, leg sweep, shoulder throw through the " + c.prop2; },
+        function (c) { return "No retreat — drop center, break both attacks in one rotation, rapid chain of strikes"; },
+        function (c) { return "Pursuit — vault " + (c.veh ? "the [Vehicle]" : "the " + c.prop) + ", close distance, spinning strike into the others"; },
+        function (c) { return "Final stand — fastest combo: backfist, elbow, sweep, leaping finishing strike"; }
+      ];
+
+      var COMPACT_GRAVITY_EXT_BEATS = [
+        function () { return "Second surge — fresh wave falls straight up at once; he walks through the falling debris"; },
+        function () { return "Human weather — orbiting bodies released in every direction, slamming into walls and ground"; },
+        function () { return "Whirlpool — new attackers whirl in a spiral orbit around him; he keeps his exact walking pace"; },
+        function () { return "Second snap — gravity snaps back for all at once; hundreds drop together, dust blast; he walks out mid-stride, open ending"; }
+      ];
+
+      function compactNegatives() {
+        var neg = ["no slow motion", "no speed ramping", "no teleportation", "no duplicated / morphing fighters", "no identity drift", "no face changes", "no outfit changes", "no lighting changes", "no flicker", "no warping", "no distorted / extra limbs or fingers", "no floating bodies", "no cartoon physics", "no cuts inside a beat"];
+        if (!state.media.text) neg.push("no text");
+        if (!state.media.subtitles) { neg.push("no subtitles"); neg.push("no captions"); }
+        if (!state.media.logos) { neg.push("no logos"); neg.push("no watermarks"); }
+        neg.push("no UI");
+        if (!state.media.music) neg.push("no music");
+        if (!state.media.dialogue) { neg.push("no dialogue"); neg.push("no narration"); }
+        neg.push("no blood"); neg.push("no gore");
+        if (state.power === "gravity") neg.push("no beams / glow / aura / particles / shockwaves — gravity stays invisible");
+        return neg.join(", ");
+      }
+
+      function compactMediaShort(title) {
+        var bits = [];
+        if (state.media.music) bits.push("music: cinematic score under impacts");
+        if (state.media.dialogue) {
+          var dlg = $("in-dialogue").value.trim();
+          bits.push(dlg ? "dialogue (protagonist, climax only): \"" + dlg + "\"" : "dialogue: one short protagonist line at climax only");
+        }
+        if (state.media.subtitles) bits.push("subtitles timed to dialogue");
+        if (state.media.text) bits.push("title text \"" + title + "\" as opening card only");
+        if (state.media.logos) bits.push("one small corner logo, never over fighters");
+        return bits;
+      }
+
+      function forgeCompactPrompt() {
+        var style = STYLES[state.style];
+        var env = ENVIRONMENTS[state.env];
+        var dur = state.duration;
+        var beatLen = dur / 5;
+        var titleIn = $("in-title").value.trim();
+        var title = (titleIn || style.title).toUpperCase();
+        var tokens = addonTokens();
+        var lines = [];
+        lines.push(state.tool.toUpperCase() + " — " + title + " | 1 VS " + state.opponents + " [COMPACT]");
+        lines.push("Format: " + dur + "s | " + state.aspect + " | " + state.speed + "x speed | " + (state.take === "continuous" ? "one continuous take, no cuts" : "hard cuts on beats only") + (state.camera === "bullet" ? " | one bullet-time arc at climax only" : " | no slow motion"));
+        var outfitNote = state.outfit === "regular" ? "" : " Outfit: " + OUTFITS[state.outfit].name + " — exactly as described for IMAGE 1, intact all clip.";
+        lines.push("Character lock: IMAGE 1 — exact face, hairstyle, outfit and body from the reference in every frame; no drift, morph or age shift." + outfitNote + (state.lock === "ultra" ? " Light and colour are locked with the face." : ""));
+        if (state.addons.vehicle) lines.push("Vehicle lock: [Vehicle] — same referenced vehicle in the scene in every frame, used in the beats as written; never changes or duplicates.");
+        lines.push("Add-ons: " + tokens.join(" ") + (state.addons.person ? " — [Person] stays consistent and out of the fight unless reached." : "") + (state.addons.place ? " — [Place] is the exact location, layout unchanged." : "") + (state.addons.thing ? " — [Thing] stays present, never duplicated or removed." : ""));
+        lines.push("Env: " + cap(env.setting) + ". " + state.daynight + ", " + (state.weather === "Rain" ? "rain throughout — wet surfaces, splashes, soaked clothes" : "dry — dust from footwork") + ". " + state.opponents + " distinct opponents; each stays down once beaten.");
+        lines.push("Beats:");
+        var beats = COMPACT_BEATS[state.style] || COMPACT_BEATS.wingchun;
+        for (var i = 0; i < 5; i++) {
+          var start = i * beatLen, end = start + beatLen;
+          lines.push(fmtT(start) + "–" + fmtT(end) + "s: " + beats[i](makeCtx(i)) + ".");
+        }
+        lines.push("Ending: " + (state.ending === "open" ? "open — ends mid-action, no pose or freeze, ready to extend." : "cut on impact at the final contact — no aftermath, no pose."));
+        var noteIn = $("in-note").value.trim();
+        if (noteIn) lines.push("Director's note: " + noteIn);
+        var mediaBits = compactMediaShort(title);
+        lines.push("Camera/motion/physics/visual/audio: " + CAMERAS[state.camera].name + " only — one dominant move, no second move; " + style.name + " motion with visible initiation, contact, reaction and recovery; " + (COMPACT_PHYSICS[state.power] || COMPACT_PHYSICS.none) + "; photoreal live-action, " + (state.daynight === "Night" ? "moody night light" : "hard daylight") + ", real skin / cloth physics; impact sounds and ambience — " + env.ambience + (mediaBits.length ? "; " + mediaBits.join("; ") : "") + ".");
+        lines.push("Negative: " + compactNegatives() + ".");
+        return lines.join("\n");
+      }
+
+      function forgeGravityCompactPrompt() {
+        var lines = [];
+        lines.push(state.tool.toUpperCase() + " — MAIN CHARACTER | SELECTIVE DIRECTIONAL GRAVITY [COMPACT]");
+        lines.push("Format: 10s | 16:9 | 3x speed | one continuous take, no cuts, no slow motion");
+        lines.push("Character lock: IMAGE 1 Main Character — exact face, hairstyle, outfit and body from the reference in every frame; calm relaxed walk for the whole clip, no stance, gestures, effort or victory pose; ends mid-stride.");
+        lines.push("Power: selective directional gravity only — selected attackers fall the wrong way with real acceleration, weight and collisions; unselected people, objects, clothing and hair obey normal gravity; Main Character never affected. No visible effect of any kind.");
+        lines.push("Env: crowded city street, attackers charging from every side — dozens building to hundreds.");
+        lines.push("Beats:");
+        lines.push("0–1s: First fall — nearest attacker falls sideways at full speed into the wall; no visible cause; he keeps walking.");
+        lines.push("1–2.5s: Sideways wave — 40–60 attackers fall sideways at once, crashing into walls and each other.");
+        lines.push("2.5–4s: Dominoes — fresh wave falls forward face-first in sequence down the street.");
+        lines.push("4–5.5s: Falling up — nearest group falls straight up into the sky; hats and loose objects stay grounded.");
+        lines.push("5.5–7s: Orbit — airborne attackers swing into a slow ring orbiting him as he walks, none touching him.");
+        lines.push("7–8s: Every direction — dozens fall left, right, forward, back and up at the same moment.");
+        lines.push("8–9s: Diagonal slide — whole remaining crowd slides diagonally as one mass, piling against the far wall.");
+        lines.push("9–10s: Snap back — normal gravity returns for all at once; hundreds drop together, dust blast; he walks out mid-stride, open ending.");
+        lines.push("Camera/motion/physics/visual/audio: backward-tracking follow only — one dominant move, one take, subtle handheld; every fall obeys real gravity with direction only changed; photoreal live-action, detailed panic vs his calm face; crowd panic, body impacts, slide scrape, low hum, one final mass slam; no music, no dialogue.");
+        lines.push("Negative: no beams, no blasts, no glowing hands / eyes, no aura, no particles, no shockwaves, no distortion, no gestures, no slow motion, no cuts, no teleport / duplicate / morph, no face or outfit changes, no floating or weightless drift, no cartoon physics, no victory pose, no text, no subtitles, no logos, no watermarks, no music, no blood, no gore.");
+        return lines.join("\n");
+      }
+
+      function updateCompactMeter(len) {
+        var count = $("compact-count");
+        var bar = $("compact-bar");
+        var fill = $("compact-bar-fill");
+        if (!count || !bar || !fill) return;
+        var left = KLING_CAP - len;
+        var pct = Math.min(100, Math.round((len / KLING_CAP) * 1000) / 10);
+        fill.style.width = pct + "%";
+        bar.classList.toggle("over", left < 0);
+        count.classList.toggle("over", left < 0);
+        if (!len) {
+          count.innerHTML = "<b>0</b> / 2,500 characters · <b>2,500</b> left for your @ tags";
+        } else if (left >= 0) {
+          count.innerHTML = "<b>" + len.toLocaleString() + "</b> / 2,500 characters · <b>" + left.toLocaleString() + "</b> left for your @ tags";
+        } else {
+          count.innerHTML = "<b>" + len.toLocaleString() + "</b> / 2,500 characters · <b>" + Math.abs(left).toLocaleString() + " over</b> the Kling cap — trim or split before pasting";
+        }
+      }
+
+      function paintCompactToggle() {
+        $("compact-full").setAttribute("aria-pressed", String(!state.compact));
+        $("compact-on").setAttribute("aria-pressed", String(state.compact));
+      }
+
+      function forgeByKind(kind, compact) {
+        if (kind === "gravity") return compact ? forgeGravityCompactPrompt() : mainCharacterPrompt();
+        return compact ? forgeCompactPrompt() : forgePrompt();
+      }
+
+      function applyCompact(on, silent) {
+        var changed = state.compact !== on;
+        state.compact = on;
+        paintCompactToggle();
+        if (!on && !forged) { updateCompactMeter(0); return; }
+        if (!changed && !forged && !on) return;
+        /* Forges the short version automatically — no extra tap on Forge needed. */
+        var kind = forged ? forged.kind : "standard";
+        var text = forgeByKind(kind, on);
+        var total = forged ? forged.total : state.duration;
+        var beatLen = forged ? forged.beatLen : state.duration / 5;
+        var ext = forged ? forged.extensions : 0;
+        /* Re-forging from settings resets extensions, exactly like Forge does. */
+        forged = { text: text, total: kind === "gravity" ? 10 : state.duration, extensions: 0, beatLen: kind === "gravity" ? 2 : state.duration / 5, kind: kind, compact: on };
+        if (kind === "gravity") {
+          setOutput(text, "Main Character preset — <b>10s</b> · " + state.tool + " · 16:9" + (on ? " · <b>Compact</b>" : ""));
+        } else {
+          setOutput(text, (on ? "Compact forged" : "Forged") + " — <b>" + forged.total + "s</b> · " + state.tool + " · " + state.aspect);
+        }
+        if (!silent) toast($("toast"), on ? "Compact forged — check the count for room left for your @ tags." : "Full version restored.");
+      }
+
+      function forgePrompt() {
+        var style = STYLES[state.style];
+        var env = ENVIRONMENTS[state.env];
+        var power = POWERS[state.power];
+        var dur = state.duration;
+        var beatLen = dur / 5;
+        var titleIn = $("in-title").value.trim();
+        var title = (titleIn || style.title).toUpperCase();
+        var aspectLabel = state.aspect === "16:9" ? "16:9 widescreen" : "9:16 vertical";
+        var tokens = addonTokens();
+
+        var cam = CAMERAS[state.camera];
+        var bulletOK = state.camera === "bullet";
+        var noteIn = $("in-note").value.trim();
+
+        var lines = [];
+        lines.push(state.tool.toUpperCase() + " — " + title + " | 1 VS " + state.opponents);
+        lines.push("");
+        lines.push("FORMAT: " + dur + " seconds | " + aspectLabel + " | Ultra-photorealistic live-action | Extreme cinematic martial arts choreography | " + state.speed + "x action speed | " + (state.take === "continuous" ? "One single continuous take — no cuts" : "Hard cuts on each timed beat only") + (bulletOK ? " | One bullet-time arc permitted at the climax — the only slow-motion moment" : " | No slow motion"));
+        lines.push("");
+        lines.push("TOOL NOTES: " + TOOL_GUIDE[state.tool]);
+        lines.push("");
+        lines.push("ADD-ONS: " + tokens.join("  "));
+        lines.push("");
+        lines.push("IMAGE REFERENCE");
+        lines.push("");
+        lines.push(OUTFITS[state.outfit].line);
+        lines.push("");
+        lines.push("CHARACTER LOCK — " + (state.lock === "ultra" ? "ULTRA" : "STANDARD"));
+        lines.push("");
+        lines.push("The protagonist is the same single person in every frame of this clip and every extension of it. Preserve 100% exact facial identity, hairstyle, body proportions, and physical appearance from IMAGE 1 — no drift, no morphing, no beautifying, no age shift." + (state.lock === "ultra" ? " Outfit, lighting direction, and color temperature are locked with the face: nothing about how he looks or how he is lit may change from the first frame to the last, in this segment or any continuation." : ""));
+        lines.push(state.opponents + " distinct adult male opponents surround him in " + env.setting + ".");
+        if (state.addons.person) lines.push("[Person] — one additional person is present in the scene exactly as shown in the reference; keep them consistent in every frame and out of the fight unless the action reaches them.");
+        if (state.addons.place) lines.push("[Place] — preserve the referenced place exactly as the fight location; its layout, surfaces, and details do not change between beats.");
+        if (state.addons.thing) lines.push("[Thing] — the referenced object stays present and consistent in the scene in every frame; it is never duplicated or removed.");
+        if (state.addons.vehicle) lines.push("[Vehicle] — the referenced vehicle is parked in the scene exactly as shown; it stays the same vehicle in every frame and is used in the choreography as written.");
+        lines.push(state.addons.environment ? "[ENV] — use the referenced environment as the exact fight location." : "[No] — no environment reference image; build the location purely from the description in this prompt.");
+        lines.push("");
+        lines.push("SETTING: " + cap(env.setting) + ". " + (state.daynight === "Night" ? "Night." : "Daylight.") + (state.weather === "Rain" ? " Rain falls steadily throughout — wet reflective surfaces, rain streaking through the light, soaked clothing and hair, splashes on every footstep and fall." : " Dry conditions — clean air, sharp shadows, dust kicked up by footwork."));
+        lines.push("");
+        lines.push("CONTINUOUS COMBAT — NO PAUSES");
+        lines.push("");
+
+        for (var i = 0; i < 5; i++) {
+          var start = i * beatLen, end = start + beatLen;
+          var beat = style.beats[i](makeCtx(i));
+          lines.push(fmtT(start) + "–" + fmtT(end) + "s | " + beat[0]);
+          lines.push("");
+          lines.push(beat[1]);
+          lines.push("");
+        }
+
+        lines.push("ENDING");
+        lines.push("");
+        lines.push(state.ending === "open"
+          ? "Open ending: the clip ends mid-action, protagonist still in motion and already reading the next threat — no victory pose, no look to camera, no freeze. The final frame must be a clean hand-off point so the action can continue seamlessly into the next clip."
+          : "Cut on impact: the camera cuts to black at the exact frame of the final strike's contact. No aftermath, no victory pose, no slow-motion replay.");
+        lines.push("");
+        if (noteIn) {
+          lines.push("DIRECTOR'S NOTE");
+          lines.push("");
+          lines.push(noteIn);
+          lines.push("");
+        }
+        lines.push("CAMERA DIRECTION — DOMINANT MOVE: " + cam.name.toUpperCase());
+        lines.push("");
+        lines.push("ONE DOMINANT MOVE RULE: one camera move carries the entire clip — " + cam.name + ". Do not introduce a second dominant move; supporting angles stay brief and secondary so the dominant move stays readable.");
+        cam.lines.forEach(function (l) { lines.push("- " + l); });
+        lines.push(state.aspect === "9:16" ? "- Framed for vertical 9:16 — keep the protagonist centered and full-body in frame during every exchange." : "- Maintain consistent geography and protagonist visibility in every angle.");
+        lines.push(state.take === "continuous" ? "- One continuous take: the camera never cuts, jumps, or resets inside the clip." : "- Cuts land only on beat boundaries and on major impacts — never mid-technique.");
+        lines.push("");
+        lines.push("MOTION AND PHYSICS");
+        lines.push("");
+        lines.push(style.motion);
+        lines.push("Power rules: " + power.physics + ".");
+        lines.push(state.speed === 1 ? "Action speed is natural 1x — real-time movement, real-time reactions." : "Action speed is " + state.speed + "x: strikes, footwork, falls, and reactions all play at " + state.speed + "x while weight, contact, and physics stay real — speed never turns into teleportation or skipped frames.");
+        lines.push("");
+        lines.push("Every attack must have a visible initiation, contact, reaction, and recovery. No teleportation, no duplicated fighters, no distorted limbs" + (bulletOK ? "." : ", no artificial speed ramping."));
+        lines.push("");
+        lines.push("VISUAL AND AUDIO");
+        lines.push("");
+        lines.push("Ultra-photorealistic Hong Kong action cinema, " + (state.daynight === "Night" ? "moody night lighting with hard practical sources and deep shadows" : "hard daylight with crisp contrast and natural color") + ", detailed facial expressions, natural skin texture, realistic clothing physics, cinematic lighting, crisp environmental details." + (state.weather === "Rain" ? " Rain is visible in every shot — streaks, splashes, and reflections on every surface." : ""));
+        lines.push(power.visual);
+        lines.push("");
+        lines.push("Authentic punch impacts, footwork, clothing movement, body collisions, " + (state.addons.vehicle ? "vehicle impacts, " : "") + "and environmental ambience — " + env.ambience + "." + (state.weather === "Rain" ? " Steady rainfall throughout the audio mix." : ""));
+        lines.push("");
+        var mediaLines = [];
+        if (state.media.music) mediaLines.push("Music: a cinematic background score drives the scene — it rises with the fight, lands with the biggest impacts, and stays mixed under the impact sounds, never drowning them out.");
+        if (state.media.dialogue) {
+          var dlg = $("in-dialogue").value.trim();
+          mediaLines.push(dlg
+            ? "Dialogue — one short line only, spoken by the protagonist at the climax: \"" + dlg + "\" No other speech anywhere in the clip."
+            : "Dialogue — one short line only, spoken by the protagonist at the climax beat, brief and in character. No other speech anywhere in the clip.");
+        }
+        if (state.media.subtitles) mediaLines.push("Subtitles: clean, readable subtitles stay on screen for the spoken dialogue, timed exactly to the words.");
+        if (state.media.text) mediaLines.push("On-screen text: the title \"" + title + "\" opens the clip as a bold cinematic title card for the first seconds — clean, readable, and gone before the fighting starts.");
+        if (state.media.logos) mediaLines.push("Logos: one small, clean logo watermark sits in a corner of the frame for the whole clip, never covering the fighters.");
+        mediaLines.forEach(function (l) { lines.push(l); lines.push(""); });
+        var keptOut = [];
+        if (!state.media.music) keptOut.push("no music");
+        if (!state.media.dialogue) keptOut.push("no dialogue");
+        if (!state.media.subtitles) keptOut.push("no subtitles");
+        if (!state.media.text) keptOut.push("no text");
+        if (!state.media.logos) keptOut.push("no logos");
+        var negMedia = [];
+        if (!state.media.text) negMedia.push("no text");
+        if (!state.media.subtitles) { negMedia.push("no subtitles"); negMedia.push("no captions"); }
+        if (!state.media.logos) { negMedia.push("no logos"); negMedia.push("no watermarks"); }
+        negMedia.push("no UI elements");
+        if (!state.media.music) negMedia.push("no music");
+        if (!state.media.dialogue) { negMedia.push("no dialogue"); negMedia.push("no narration"); }
+        lines.push((keptOut.length ? cap(keptOut.join(", ")) : "Music, dialogue, subtitles, on-screen text, and logos are all in — exactly as set above") + (bulletOK ? "" : ", no slow motion") + ", no blood, no gore.");
+        lines.push("");
+        lines.push("CONSISTENCY & CONTINUITY");
+        lines.push("");
+        CONSISTENCY_LINES.forEach(function (l) { lines.push("- " + l); });
+        lines.push("");
+        lines.push("NEGATIVE PROMPT — AVOID ALL OF THE FOLLOWING");
+        lines.push("");
+        lines.push((bulletOK ? "No slow motion outside the single bullet-time arc, " : "No slow motion, no speed ramping, ") + "no teleportation, no duplicated or morphing fighters, no identity drift, no face changes, no outfit changes, no lighting changes, no flicker, no warping, no distorted limbs, no extra limbs, no extra fingers, no missing fingers, no floating or weightless bodies, no cartoon physics, no cuts or camera jumps inside a beat, " + negMedia.join(", ") + ", no blood, no gore." + (state.power === "gravity" ? " No energy beams, no glowing hands, no aura, no magic effects, no particles, no shockwaves — the gravity power must stay completely invisible." : ""));
+        lines.push("");
+        lines.push("HIGHEST PRIORITY: " + style.priority + " Above all, protect the lock: if any frame trades choreography for a changed face, a changed outfit, or changed lighting, the clip has failed — consistency outranks spectacle.");
+
+        return lines.join("\n");
+      }
+
+      function fmtT(n) { return (Math.round(n * 10) / 10).toString().replace(/\.0$/, ""); }
+
+      function setOutput(text, statusHtml) {
+        $("out").value = text;
+        $("status-line").innerHTML = statusHtml;
+        $("btn-copy").disabled = !text;
+        $("btn-download").disabled = !text;
+        $("btn-extend").disabled = !text;
+        $("btn-copy-neg").disabled = !text;
+        var extendHint = $("extend-locked-hint");
+        if (extendHint) extendHint.classList.toggle("hidden", !!text);
+        updateCompactMeter(text ? text.length : 0);
+        if (text) {
+          var words = text.split(/\s+/).filter(Boolean).length;
+          $("out-meta").innerHTML = "<b>" + words.toLocaleString() + "</b> words · <b>" + text.length.toLocaleString() + "</b> characters · ready for " + state.tool;
+          var isCompact = !!(forged && forged.compact);
+          var checks = isCompact
+            ? ["Timed beats — short form", "Character lock ×1", "One dominant camera move", "Compact — under Kling cap check above", "Negative / avoid list"]
+            : ["Timed beats", "Character lock", "One dominant camera move", "Consistency rules", "Negative / avoid list"];
+          if (isCompact && state.addons.vehicle) checks.splice(2, 0, "Vehicle lock ×1");
+          if (state.media.music) checks.push("Music");
+          if (state.media.dialogue) checks.push("Dialogue line");
+          if (state.media.subtitles) checks.push("Subtitles");
+          if (state.media.text) checks.push("Title text");
+          if (state.media.logos) checks.push("Logo");
+          if (forged && forged.extensions > 0) checks.push("Extended ×" + forged.extensions);
+          $("check-strip").innerHTML = checks.map(function (c) { return "<span>" + c + "</span>"; }).join("");
+        } else {
+          $("out-meta").textContent = "";
+          $("check-strip").innerHTML = "";
+        }
+      }
+
+      $("compact-full").addEventListener("click", function () { applyCompact(false); });
+      $("compact-on").addEventListener("click", function () { applyCompact(true); });
+
+      $("btn-generate").addEventListener("click", function () {
+        var text = state.compact ? forgeCompactPrompt() : forgePrompt();
+        forged = { text: text, total: state.duration, extensions: 0, beatLen: state.duration / 5, kind: "standard", compact: state.compact };
+        setOutput(text, (state.compact ? "Compact forged" : "Forged") + " — <b>" + forged.total + "s</b> · " + state.tool + " · " + state.aspect);
+        toast($("toast"), state.compact ? "Compact forged — check the count for room left for your @ tags." : "Forged. Copy it into " + state.tool + ", or extend it below.");
+      });
+
+      $("btn-main").addEventListener("click", function () {
+        state.duration = 10;
+        state.aspect = "16:9";
+        state.opponents = 10;
+        state.env = "street";
+        state.daynight = "Night";
+        state.weather = "Dry";
+        state.outfit = "regular";
+        state.style = "wingchun";
+        state.power = "gravity";
+        state.camera = "handheld";
+        state.speed = 3;
+        state.take = "continuous";
+        state.lock = "ultra";
+        state.ending = "open";
+        state.addons.person = false;
+        state.addons.place = false;
+        state.addons.thing = false;
+        state.addons.vehicle = false;
+        state.addons.environment = true;
+        state.media.music = false;
+        state.media.dialogue = false;
+        state.media.subtitles = false;
+        state.media.text = false;
+        state.media.logos = false;
+        $("in-title").value = "";
+        $("in-note").value = "";
+        $("in-dialogue").value = "";
+        refresh();
+        var text = state.compact ? forgeGravityCompactPrompt() : mainCharacterPrompt();
+        forged = { text: text, total: 10, extensions: 0, beatLen: 2, kind: "gravity", compact: state.compact };
+        setOutput(text, "Main Character preset loaded — <b>10s</b> · " + state.tool + " · 16:9 · 3x speed · one take" + (state.compact ? " · <b>Compact</b>" : ""));
+        toast($("toast"), "Main Character loaded. Copy it into " + state.tool + " with your reference photo as IMAGE 1 — or Extend to keep him walking.");
+        if (window.innerWidth < 960) { $("out").scrollIntoView({ behavior: "smooth", block: "start" }); }
+      });
+
+      $("btn-dragon").addEventListener("click", function () {
+        state.tool = "Seedance";
+        state.duration = 10;
+        state.aspect = "16:9";
+        state.opponents = 10;
+        state.env = "street";
+        state.daynight = "Night";
+        state.weather = "Dry";
+        state.outfit = "regular";
+        state.style = "wingchun";
+        state.power = "none";
+        state.camera = "auto";
+        state.speed = 1;
+        state.take = "continuous";
+        state.lock = "ultra";
+        state.ending = "impact";
+        state.addons.person = false;
+        state.addons.place = false;
+        state.addons.thing = false;
+        state.addons.vehicle = true;
+        state.addons.environment = true;
+        state.media.music = false;
+        state.media.dialogue = false;
+        state.media.subtitles = false;
+        state.media.text = false;
+        state.media.logos = false;
+        $("in-title").value = "";
+        $("in-note").value = "";
+        $("in-dialogue").value = "";
+        refresh();
+        var text = state.compact ? forgeCompactPrompt() : forgePrompt();
+        forged = { text: text, total: state.duration, extensions: 0, beatLen: state.duration / 5, kind: "standard", compact: state.compact };
+        setOutput(text, (state.compact ? "Dragon preset — Compact forged" : "Dragon preset forged") + " — <b>10s</b> · Seedance · 16:9 · Wing Chun");
+        toast($("toast"), state.compact ? "The Dragon — compact version forged. Check the count for @ tag room." : "The Dragon is forged — the full template, upgraded with the lock, camera rule, and avoid list.");
+        if (window.innerWidth < 960) { $("out").scrollIntoView({ behavior: "smooth", block: "start" }); }
+      });
+
+      $("btn-extend").addEventListener("click", function () {
+        if (!forged) return;
+        var addBeats = 2;
+        var addSecs = addBeats * forged.beatLen;
+        var startTotal = forged.total;
+        var newTotal = startTotal + addSecs;
+        var extIdx = forged.extensions;
+        var isCompact = !!forged.compact;
+
+        var block = [];
+        block.push("");
+        block.push("——————————————————————————");
+        if (isCompact) {
+          block.push("Extension " + (extIdx + 1) + " — continues " + fmtT(startTotal) + "–" + fmtT(newTotal) + "s: seamless from the exact final frame, same lock / camera / negative above, no reset.");
+          var cBeatSet = forged.kind === "gravity" ? COMPACT_GRAVITY_EXT_BEATS : COMPACT_EXT_BEATS;
+          for (var cj = 0; cj < addBeats; cj++) {
+            var cs = startTotal + cj * forged.beatLen, ce = cs + forged.beatLen;
+            block.push(fmtT(cs) + "–" + fmtT(ce) + "s: " + cBeatSet[(extIdx * addBeats + cj) % cBeatSet.length](makeCtx(cj % 5)) + ".");
+          }
+        } else {
+          block.push("EXTENSION " + (extIdx + 1) + " — THE ACTION CONTINUES (" + fmtT(startTotal) + "–" + fmtT(newTotal) + "s)");
+          block.push("");
+          block.push("Seamless continuation from the exact final frame of the previous segment — same protagonist, same face, same outfit, same location, same lighting. No reset, no pause, no new introduction.");
+          block.push("LOCK CARRIES OVER: the character lock, consistency rules, and negative prompt from the original prompt apply in full to this extension — same face, same outfit, same light, zero drift.");
+          block.push(forged.kind === "gravity"
+            ? "CAMERA CONTINUES: the same single backward-tracking follow, still one continuous take — the dominant move never changes."
+            : "CAMERA CONTINUES: the dominant move stays " + CAMERAS[state.camera].name + " — do not switch camera language mid-story.");
+          block.push("");
+          var beatSet = forged.kind === "gravity" ? GRAVITY_EXT_BEATS : EXT_BEATS;
+          for (var j = 0; j < addBeats; j++) {
+            var s = startTotal + j * forged.beatLen, e = s + forged.beatLen;
+            var beat = beatSet[(extIdx * addBeats + j) % beatSet.length](makeCtx(j % 5));
+            block.push(fmtT(s) + "–" + fmtT(e) + "s | " + beat[0]);
+            block.push("");
+            block.push(beat[1]);
+            block.push("");
+          }
+        }
+
+        var text = forged.text;
+        text = text.replace(forged.total + " seconds", newTotal + " seconds");
+        if (isCompact) text = text.replace("Format: " + forged.total + "s", "Format: " + newTotal + "s");
+        if (extIdx === 0 && forged.kind === "gravity") text = text.replace("DIRECTIONAL GRAVITY", "DIRECTIONAL GRAVITY (EXTENDED)");
+        else if (extIdx === 0) text = text.replace("| 1 VS ", "(EXTENDED) | 1 VS ");
+        text = text + "\n" + block.join("\n").replace(/\n+$/, "") + "\n";
+
+        forged.text = text;
+        forged.total = newTotal;
+        forged.extensions = extIdx + 1;
+        setOutput(text, "Extended ×" + forged.extensions + " — <b>" + forged.total + "s</b> total · " + state.tool + " · " + state.aspect);
+        var out = $("out");
+        out.scrollTop = out.scrollHeight;
+        toast($("toast"), "Extended — action now runs to " + fmtT(newTotal) + "s.");
+      });
+
+      $("btn-copy").addEventListener("click", function () {
+        if (forged) copyText(forged.text, $("toast"), "Prompt copied — paste it into " + state.tool + ".");
+      });
+      $("btn-download").addEventListener("click", function () {
+        if (forged) { downloadText(forged.text, "action-forge-prompt.txt"); toast($("toast"), "Downloaded action-forge-prompt.txt"); }
+      });
+      $("btn-copy-neg").addEventListener("click", function () {
+        if (!forged) return;
+        var idx = forged.text.indexOf("NEGATIVE PROMPT");
+        if (idx < 0) idx = forged.text.indexOf("Negative:");
+        var neg = idx >= 0 ? forged.text.slice(idx) : forged.text;
+        copyText(neg, $("toast"), "Negative / avoid list copied — paste it into " + state.tool + "'s negative field.");
+      });
+
+      /* ================= SWAP MODE ================= */
+
+      var SWAP_BASIC = "Change the character in the video to the new character in the image";
+      var SWAP_LOCK = "Change the character in the video to the new character in the image. Preserve the original video exactly — same motion, same timing, same camera movement, same background, same lighting, same clothing movement and physics. Only the character changes: preserve 100% of the new character's facial identity, hairstyle, body proportions, and physical appearance from the image in every frame. No other changes, no added elements, no text, no logos.";
+      var SWAP_PRO = "Change the character in the video (@Video1) to the new character in the image (@Image1). MOTION LOCK: copy the source video's motion 1-to-1 — same actions, same timing, same speed, same camera movement, same framing, same cuts. CHARACTER LOCK: preserve 100% of the new character's facial identity, hairstyle, body proportions, outfit, and physical appearance from @Image1 in every single frame — no drift, no morphing, no face changes. LIGHT LOCK: keep the source video's lighting, color, background, and environment exactly as they are; relight nothing. Only the person changes — everything else is untouched. AVOID: no extra people, no duplicated limbs, no distorted hands or fingers, no flicker, no warping, no added elements, no removed elements, no text, no subtitles, no logos, no watermarks.";
+
+      function showSwap(text) {
+        swapText = text;
+        var box = $("swap-out");
+        box.textContent = text;
+        box.classList.remove("empty");
+        $("swap-copy").disabled = false;
+        $("swap-download").disabled = false;
+      }
+
+      /* ---- Swap templates (character / object / reference-image) ---- */
+      var swapType = "character";
+      var swapLighting = "warm golden-hour rim lighting";
+      var swapRefType = "person";
+      var SWAP_TYPE_INFO = {
+        character: { label: "Character / Person", desc: "Use this when replacing a person in a video while keeping their exact body movement, camera angle, and lighting intact." },
+        object: { label: "Object / Prop", desc: "Use this when replacing an item a person is holding, wearing, or interacting with — swapping a coffee cup, phone, car, or product." },
+        reference: { label: "Reference Image", desc: "Use this when your video AI tool accepts both a source video and a reference image (@image or uploaded asset)." }
+      };
+      function paintSwapType() {
+        document.querySelectorAll("#seg-swaptype button").forEach(function (b) {
+          b.setAttribute("aria-pressed", String(b.getAttribute("data-swaptype") === swapType));
+        });
+        $("panel-character").classList.toggle("hidden", swapType !== "character");
+        $("panel-object").classList.toggle("hidden", swapType !== "object");
+        $("panel-reference").classList.toggle("hidden", swapType !== "reference");
+        $("val-swaptype").textContent = SWAP_TYPE_INFO[swapType].label;
+        $("swap-type-desc").textContent = SWAP_TYPE_INFO[swapType].desc;
+      }
+      document.querySelectorAll("#seg-swaptype button").forEach(function (b) {
+        b.addEventListener("click", function () { swapType = b.getAttribute("data-swaptype"); paintSwapType(); });
+      });
+      document.querySelectorAll("#seg-lighting button").forEach(function (b) {
+        b.addEventListener("click", function () {
+          swapLighting = b.getAttribute("data-light");
+          document.querySelectorAll("#seg-lighting button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+        });
+      });
+      document.querySelectorAll("#seg-reftype button").forEach(function (b) {
+        b.addEventListener("click", function () {
+          swapRefType = b.getAttribute("data-reftype");
+          document.querySelectorAll("#seg-reftype button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+        });
+      });
+      function fieldOr(id, fallback) { var v = $(id).value.trim(); return v || fallback; }
+      function forgeSwapPrompt() {
+        var text;
+        if (swapType === "character") {
+          var orig = fieldOr("in-orig-person", "the man in the blue jacket");
+          var neu = fieldOr("in-new-person", "a woman in her late 20s wearing a tailored camel trench coat and silver hoop earrings");
+          text = "Replace " + orig + " with " + neu + ".\n\nPreserve the exact body pose, facial expressions, hand gestures, and motion path of the original subject. Match the scene's original " + swapLighting + ", natural shadows on the ground, depth-of-field blur, and film grain. Keep the background, camera movement, and all surrounding objects completely unchanged.";
+        } else if (swapType === "object") {
+          var oOrig = fieldOr("in-orig-object", "the white paper coffee cup in the person's right hand");
+          var oNew = fieldOr("in-new-object", "a sleek matte-black stainless steel insulated tumbler with subtle condensation");
+          text = "Swap " + oOrig + " with " + oNew + ".\n\nMaintain natural hand grip, finger occlusion, weight, and motion tracking throughout every frame. Match specular reflections, ambient occlusion shadows, and motion blur to the rest of the footage. Do not alter the person, clothing, lighting, or background environment.";
+        } else {
+          var rOrig = fieldOr("in-orig-ref", "the original subject in the video");
+          text = "Replace " + rOrig + " with the exact " + swapRefType + " shown in the reference image.\n\nRetain 100% of the original video's choreography, camera tracking, perspective, and timing. Seamlessly adapt the lighting, color grading, cast shadows, and subtle motion blur of the reference subject so it blends naturally into the environment with zero flickering or edge artifacts.";
+        }
+        showSwap(text);
+        toast($("swap-toast"), SWAP_TYPE_INFO[swapType].label + " swap forged — copy it into your tool with @Video1" + (swapType === "reference" ? " + @Image1." : "."));
+      }
+      $("swap-forge").addEventListener("click", forgeSwapPrompt);
+      paintSwapType();
+
+      $("swap-basic").addEventListener("click", function () { showSwap(SWAP_BASIC); toast($("swap-toast"), "That's the line — copy it into your tool with your video + character image."); });
+      $("swap-lock").addEventListener("click", function () { showSwap(SWAP_LOCK); toast($("swap-toast"), "Full lock version — same swap, everything else in the video protected."); });
+      $("swap-pro").addEventListener("click", function () { showSwap(SWAP_PRO); toast($("swap-toast"), "Swap Pro — motion, character & light locked, with the full avoid list."); });
+      $("swap-copy").addEventListener("click", function () { if (swapText) copyText(swapText, $("swap-toast"), "Swap prompt copied."); });
+      $("swap-download").addEventListener("click", function () { if (swapText) { downloadText(swapText, "swap-prompt.txt"); toast($("swap-toast"), "Downloaded swap-prompt.txt"); } });
+
+      /* ================= MODE TABS ================= */
+
+      document.querySelectorAll(".mode-tab").forEach(function (tab) {
+        tab.addEventListener("click", function () {
+          state.mode = tab.getAttribute("data-mode");
+          document.querySelectorAll(".mode-tab").forEach(function (t) {
+            t.setAttribute("aria-selected", String(t === tab));
+          });
+          $("view-swap").classList.toggle("hidden", state.mode !== "swap");
+          $("view-action").classList.toggle("hidden", state.mode !== "action");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      });
+
+      paintCompactToggle();
+      updateCompactMeter(0);
+      refresh();
+    </script>
+  </body>
+</html>
