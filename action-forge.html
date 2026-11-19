@@ -279,8 +279,8 @@
             <div class="card preset">
               <h2>Pro Presets</h2>
               <p class="hint">Hand-built, director-grade scenes. One tap loads the complete prompt into the output — copy it straight into your tool.</p>
-              <button class="btn-gold" id="btn-kai">Load KAI — Directional Gravity</button>
-              <p class="hint" style="margin:12px 0 0">10 seconds · 16:9 · 3x action speed · one continuous take, no slow motion. KAI — blond, glasses, black bomber jacket with the K patch — walks calm through a charging crowd while selected attackers fall sideways, forward, up into the sky, orbit him, then drop all at once when gravity snaps back. No visible effects of any kind. Open ending, built to extend.</p>
+              <button class="btn-gold" id="btn-main">Load Main Character — Directional Gravity</button>
+              <p class="hint" style="margin:12px 0 0">10 seconds · 16:9 · 3x action speed · one continuous take, no slow motion. The Main Character (IMAGE 1) — locked to your reference photo — walks calm through a charging crowd while selected attackers fall sideways, forward, up into the sky, orbit him, then drop all at once when gravity snaps back. No visible effects of any kind. Open ending, built to extend.</p>
               <button class="btn-ghost preset-alt" id="btn-dragon">Load the Dragon — Wing Chun Classic</button>
               <p class="hint" style="margin:10px 0 0">The original template: Seedance · 10s · 16:9 · 1 vs 10 · Hong Kong street at night · Wing Chun, no powers, cut on impact. One tap sets every control and forges it.</p>
             </div>
@@ -618,7 +618,7 @@
       var SPEEDS = [
         { value: 1, label: "1x", sub: "Natural speed" },
         { value: 2, label: "2x", sub: "Fast & aggressive" },
-        { value: 3, label: "3x", sub: "KAI speed" }
+        { value: 3, label: "3x", sub: "Extreme speed" }
       ];
       var TAKES = [
         { value: "continuous", label: "One Continuous Take", sub: "No cuts" },
@@ -758,34 +758,34 @@
           "Every remaining opponent attacks at once in a final desperate rush. IMAGE 1 chains his fastest combination of the entire fight — backfist, elbow, sweep, and a leaping finishing strike" + c.pow + ". Bodies fall in every direction. IMAGE 1 lands dead center, breathing hard, scanning for the next threat as the camera pushes in and cuts to black."]; }
       ];
 
-      /* ---- KAI extension beats: the gravity chaos escalates, KAI never stops walking ---- */
-      var KAI_EXT_BEATS = [
+      /* ---- Gravity extension beats: the chaos escalates, the Main Character never stops walking ---- */
+      var GRAVITY_EXT_BEATS = [
         function (c) { return ["THE SECOND SURGE",
-          "Seamless continuation — no cut, no reset. A fresh wave of attackers pours in from the far end of the street and charges. Halfway to KAI, every one of them falls straight up at once, ripped off the ground and accelerating into the sky, weapons and hats raining back down under normal gravity. KAI walks through the falling debris without looking up."]; },
+          "Seamless continuation — no cut, no reset. A fresh wave of attackers pours in from the far end of the street and charges. Halfway to the Main Character (IMAGE 1), every one of them falls straight up at once, ripped off the ground and accelerating into the sky, weapons and hats raining back down under normal gravity. The Main Character walks through the falling debris without looking up."]; },
         function (c) { return ["HUMAN WEATHER",
-          "The orbiting bodies tighten into a fast ring around KAI, then he releases them in every direction at once — they blast outward sideways, forward, backward, and up, slamming into walls, the ground, and each other. A second group still on its feet slides diagonally across the street in one helpless mass, scraping and colliding. Still no visible effect of any kind — only bodies, moving wrong."]; },
+          "The orbiting bodies tighten into a fast ring around the Main Character, then he releases them in every direction at once — they blast outward sideways, forward, backward, and up, slamming into walls, the ground, and each other. A second group still on its feet slides diagonally across the street in one helpless mass, scraping and colliding. Still no visible effect of any kind — only bodies, moving wrong."]; },
         function (c) { return ["THE WHIRLPOOL",
-          "Dozens of new attackers rush from both ends of the street simultaneously. Mid-charge, their gravity rotates in a spiral — they sweep off their feet and whirl around KAI in a tightening human whirlpool, orbiting faster and faster, none of them ever touching him. He keeps his exact walking pace through the center of it, calm, eyes forward."]; },
+          "Dozens of new attackers rush from both ends of the street simultaneously. Mid-charge, their gravity rotates in a spiral — they sweep off their feet and whirl around the Main Character in a tightening human whirlpool, orbiting faster and faster, none of them ever touching him. He keeps his exact walking pace through the center of it, calm, eyes forward."]; },
         function (c) { return ["THE SECOND SNAP",
-          "The whirlpool flings its bodies outward and up — then normal gravity snaps back for the entire crowd at the same instant. Hundreds drop straight down simultaneously and slam into the street in one earth-shaking impact, dust blasting outward. KAI walks out of the dust mid-stride, untouched, still no victory pose, no look back — the action is left open, ready to continue."]; }
+          "The whirlpool flings its bodies outward and up — then normal gravity snaps back for the entire crowd at the same instant. Hundreds drop straight down simultaneously and slam into the street in one earth-shaking impact, dust blasting outward. The Main Character walks out of the dust mid-stride, untouched, still no victory pose, no look back — the action is left open, ready to continue."]; }
       ];
 
-      /* ---- The KAI prompt: hand-written, director-grade. Tool name comes from the current selection. ---- */
-      function kaiPrompt() {
+      /* ---- The Main Character gravity prompt: hand-written, director-grade. Tool name comes from the current selection. ---- */
+      function mainCharacterPrompt() {
         var lines = [];
-        lines.push(state.tool.toUpperCase() + " — KAI | SELECTIVE DIRECTIONAL GRAVITY | THE MAN WHO FALLS THE WORLD");
+        lines.push(state.tool.toUpperCase() + " — MAIN CHARACTER | SELECTIVE DIRECTIONAL GRAVITY");
         lines.push("");
         lines.push("FORMAT: 10 seconds | 16:9 widescreen landscape | Ultra-photorealistic live-action | 3x action speed | One single continuous take — no cuts | No slow motion anywhere in the clip.");
         lines.push("");
-        lines.push("CHARACTER LOCK — KAI");
+        lines.push("CHARACTER LOCK — MAIN CHARACTER (IMAGE 1)");
         lines.push("");
-        lines.push("Use the reference photo as KAI. Preserve 100% exact facial identity, hairstyle, outfit, body proportions, and physical appearance in every single frame: blond hair, glasses, black bomber jacket with the K patch, black cargo pants, white sneakers. The glasses never come off. The jacket, the K patch, and the sneakers never change. KAI is calm for the entire clip — relaxed walking pace, loose posture, no fighting stance, no hand gestures, no visible effort, no victory pose. He simply keeps walking forward through the chaos from the first frame to the last, and the clip ends mid-stride on an open ending so the action can continue seamlessly into the next clip.");
+        lines.push("Use IMAGE 1 as the Main Character. Preserve 100% exact facial identity, hairstyle, outfit, body proportions, and physical appearance from the reference photo in every single frame. Nothing about the Main Character's appearance changes — same face, same hair, same outfit, same build from the first frame to the last. The Main Character is calm for the entire clip — relaxed walking pace, loose posture, no fighting stance, no hand gestures, no visible effort, no victory pose. He simply keeps walking forward through the chaos from the first frame to the last, and the clip ends mid-stride on an open ending so the action can continue seamlessly into the next clip.");
         lines.push("");
         lines.push("THE POWER — THE WHOLE POINT OF THE SCENE");
         lines.push("");
-        lines.push("\"KAI possesses terrifying selective directional gravity manipulation. KAI does NOT shoot energy and does NOT visibly generate magic. He simply changes the direction of gravity affecting specifically selected attackers.\"");
+        lines.push("\"The Main Character possesses terrifying selective directional gravity manipulation. The Main Character does NOT shoot energy and does NOT visibly generate magic. He simply changes the direction of gravity affecting specifically selected attackers.\"");
         lines.push("");
-        lines.push("There are NO visible effects of any kind: no beams, no energy blasts, no glowing hands, no aura, no runes, no particles, no shockwave rings, no air distortion, no light of any color. Nothing ever leaves KAI's body and nothing appears around him. The horror is purely physical — people suddenly falling the wrong way. Every selected body falls with full real-world physics, just in the wrong direction: real acceleration, real tumbling, real weight, real collisions. Attackers KAI has NOT selected, plus bystanders, loose objects, clothing, and hair, all obey completely normal gravity at all times. KAI himself is never affected by any gravity change.");
+        lines.push("There are NO visible effects of any kind: no beams, no energy blasts, no glowing hands, no aura, no runes, no particles, no shockwave rings, no air distortion, no light of any color. Nothing ever leaves the Main Character's body and nothing appears around him. The horror is purely physical — people suddenly falling the wrong way. Every selected body falls with full real-world physics, just in the wrong direction: real acceleration, real tumbling, real weight, real collisions. Attackers the Main Character has NOT selected, plus bystanders, loose objects, clothing, and hair, all obey completely normal gravity at all times. The Main Character himself is never affected by any gravity change.");
         lines.push("");
         lines.push("SETTING: A crowded city street, attackers pouring in from every side — dozens at first, building to hundreds. The crowd is armed with rage, not weapons of war: they charge on foot, shouting, closing in on the one calm man walking through the middle of them.");
         lines.push("");
@@ -793,27 +793,27 @@
         lines.push("");
         lines.push("0–1s | THE FIRST ONE");
         lines.push("");
-        lines.push("The crowd surges toward KAI. The nearest attacker, mid-charge, suddenly falls SIDEWAYS — horizontally, at full gravity speed — and slams into the wall beside him. No push, no impact, no visible cause. The man simply fell the wrong way. KAI does not react. He keeps walking.");
+        lines.push("The crowd surges toward the Main Character. The nearest attacker, mid-charge, suddenly falls SIDEWAYS — horizontally, at full gravity speed — and slams into the wall beside him. No push, no impact, no visible cause. The man simply fell the wrong way. The Main Character does not react. He keeps walking.");
         lines.push("");
         lines.push("1–2.5s | THE SIDEWAYS WAVE");
         lines.push("");
-        lines.push("Forty to sixty attackers fall sideways at the exact same instant, ripped horizontally off their feet in one direction, crashing into walls, into each other, and across the street in a single violent wave. Screams cut short on impact. KAI walks through the gap they leave, untouched, pace unchanged.");
+        lines.push("Forty to sixty attackers fall sideways at the exact same instant, ripped horizontally off their feet in one direction, crashing into walls, into each other, and across the street in a single violent wave. Screams cut short on impact. The Main Character walks through the gap they leave, untouched, pace unchanged.");
         lines.push("");
         lines.push("2.5–4s | DOMINOES");
         lines.push("");
-        lines.push("A fresh rank of attackers charges — and falls FORWARD like dominoes, the whole wave pitching face-first in sequence down the street, each man knocked into the next, bodies piling and sliding. The fall travels through the crowd like a wave through wheat. KAI steps calmly over the edge of it and keeps going.");
+        lines.push("A fresh rank of attackers charges — and falls FORWARD like dominoes, the whole wave pitching face-first in sequence down the street, each man knocked into the next, bodies piling and sliding. The fall travels through the crowd like a wave through wheat. The Main Character steps calmly over the edge of it and keeps going.");
         lines.push("");
         lines.push("4–5.5s | FALLING UP");
         lines.push("");
-        lines.push("A group of attackers nearest to KAI falls UP — straight off the ground and accelerating into the sky, screaming, arms windmilling, shrinking upward. Hats and loose objects stay on the ground under normal gravity; only the selected men rise. KAI never looks up.");
+        lines.push("A group of attackers nearest to the Main Character falls UP — straight off the ground and accelerating into the sky, screaming, arms windmilling, shrinking upward. Hats and loose objects stay on the ground under normal gravity; only the selected men rise. The Main Character never looks up.");
         lines.push("");
         lines.push("5.5–7s | THE ORBIT");
         lines.push("");
-        lines.push("The airborne attackers stop rising and swing into orbit around KAI — dozens of bodies circling him in a slow, terrifying ring as he walks, like moons around a planet, none of them touching him, all of them conscious and panicking. The ring travels with him down the street, holding its distance perfectly.");
+        lines.push("The airborne attackers stop rising and swing into orbit around the Main Character — dozens of bodies circling him in a slow, terrifying ring as he walks, like moons around a planet, none of them touching him, all of them conscious and panicking. The ring travels with him down the street, holding its distance perfectly.");
         lines.push("");
         lines.push("7–8s | EVERY DIRECTION AT ONCE");
         lines.push("");
-        lines.push("Dozens more attackers fall in EVERY direction at the same moment — left, right, forward, backward, and straight up — a full sphere of wrong-way falling exploding outward around KAI while the orbiting ring still turns above the chaos. There is no safe direction left in the street. KAI walks through the center of it.");
+        lines.push("Dozens more attackers fall in EVERY direction at the same moment — left, right, forward, backward, and straight up — a full sphere of wrong-way falling exploding outward around the Main Character while the orbiting ring still turns above the chaos. There is no safe direction left in the street. The Main Character walks through the center of it.");
         lines.push("");
         lines.push("8–9s | THE DIAGONAL SLIDE");
         lines.push("");
@@ -821,36 +821,36 @@
         lines.push("");
         lines.push("9–10s | GRAVITY SNAPS BACK");
         lines.push("");
-        lines.push("Normal gravity returns for everyone at the exact same instant. HUNDREDS of airborne attackers — the orbiters, the risers, all of them — drop straight down simultaneously and slam into the street in a single earth-shaking impact, dust blasting outward in a ring. KAI walks out of the dust mid-stride, calm, untouched, no victory pose, no look back. The clip ends on his walk — open ending, ready to continue.");
+        lines.push("Normal gravity returns for everyone at the exact same instant. HUNDREDS of airborne attackers — the orbiters, the risers, all of them — drop straight down simultaneously and slam into the street in a single earth-shaking impact, dust blasting outward in a ring. The Main Character walks out of the dust mid-stride, calm, untouched, no victory pose, no look back. The clip ends on his walk — open ending, ready to continue.");
         lines.push("");
         lines.push("CAMERA DIRECTION");
         lines.push("");
         lines.push("- ONE DOMINANT MOVE RULE: one camera move carries the entire clip — the backward-tracking follow below. No second move is introduced, ever.");
         lines.push("- One single continuous take for the full 10 seconds — the camera never cuts, never jumps, never resets.");
-        lines.push("- Smooth backward-tracking shot ahead of KAI, keeping him centered and full-body in frame as he walks toward camera through the chaos.");
+        lines.push("- Smooth backward-tracking shot ahead of the Main Character, keeping him centered and full-body in frame as he walks toward camera through the chaos.");
         lines.push("- Subtle, weighty handheld feel — grounded and real, never shaky-cam.");
-        lines.push("- The camera tilts up only slightly as bodies fall into the sky, then settles back to KAI — he is always the calm center of the frame.");
-        lines.push("- At the final snap-back, a single hard camera shudder on the mass impact — then steady again on KAI walking.");
-        lines.push("- 3x action speed applies to the falling, the impacts, and the crowd — KAI's own walk stays eerily natural inside it.");
+        lines.push("- The camera tilts up only slightly as bodies fall into the sky, then settles back to the Main Character — he is always the calm center of the frame.");
+        lines.push("- At the final snap-back, a single hard camera shudder on the mass impact — then steady again on the Main Character walking.");
+        lines.push("- 3x action speed applies to the falling, the impacts, and the crowd — the Main Character's own walk stays eerily natural inside it.");
         lines.push("");
         lines.push("MOTION AND PHYSICS");
         lines.push("");
-        lines.push("Every fall obeys real gravity and real physics — acceleration, tumbling, momentum, collision, and rebound — with only the DIRECTION changed, and only for the attackers KAI selects. Bodies that fall sideways travel horizontally until something stops them. Bodies that fall up keep accelerating upward. The orbit holds consistent distance and speed. The final drop is perfectly simultaneous across hundreds of bodies. No floating, no drifting, no weightlessness — wrong-way gravity is still gravity: fast, heavy, and final.");
+        lines.push("Every fall obeys real gravity and real physics — acceleration, tumbling, momentum, collision, and rebound — with only the DIRECTION changed, and only for the attackers the Main Character selects. Bodies that fall sideways travel horizontally until something stops them. Bodies that fall up keep accelerating upward. The orbit holds consistent distance and speed. The final drop is perfectly simultaneous across hundreds of bodies. No floating, no drifting, no weightlessness — wrong-way gravity is still gravity: fast, heavy, and final.");
         lines.push("");
         lines.push("VISUAL AND AUDIO");
         lines.push("");
-        lines.push("Ultra-photorealistic live-action, detailed facial panic on the attackers, calm detailed expression on KAI, natural skin texture, realistic clothing and hair physics under both normal and redirected gravity, cinematic street lighting, crisp environmental detail.");
+        lines.push("Ultra-photorealistic live-action, detailed facial panic on the attackers, calm detailed expression on the Main Character, natural skin texture, realistic clothing and hair physics under both normal and redirected gravity, cinematic street lighting, crisp environmental detail.");
         lines.push("");
         lines.push("Audio: raw crowd panic — screaming, shouting, scrambling — body impacts on walls and pavement, the skidding scrape of the diagonal slide, one low deep hum underneath the entire clip, and the final mass impact as a single massive ground-shaking slam. No music. No dialogue. No narration.");
         lines.push("");
         lines.push("CONSISTENCY & CONTINUITY");
         lines.push("");
         CONSISTENCY_LINES.forEach(function (l) { lines.push("- " + l); });
-        lines.push("- KAI continuity is absolute: blond hair, glasses on, black bomber jacket with the K patch, black cargo pants, white sneakers — identical in the first frame, the last frame, and every extension.");
+        lines.push("- Main Character continuity is absolute: same face, same hairstyle, same outfit, and same physical appearance from IMAGE 1 — identical in the first frame, the last frame, and every extension.");
         lines.push("");
         lines.push("NEGATIVE PROMPT");
         lines.push("");
-        lines.push("No energy beams, no energy blasts, no glowing hands, no glowing eyes, no aura, no magic circles, no runes, no particles, no shockwaves, no air distortion, no telekinesis gestures, no hand-waving, no visible power source of any kind. No slow motion, no speed ramping on KAI, no cuts, no camera jumps, no teleportation, no duplicated or morphing people, no distorted limbs, no face changes, no outfit changes, no floating or weightless drift, no cartoon physics, no victory pose, no posing for camera, no text, no subtitles, no logos, no watermarks, no music, no blood, no gore.");
+        lines.push("No energy beams, no energy blasts, no glowing hands, no glowing eyes, no aura, no magic circles, no runes, no particles, no shockwaves, no air distortion, no telekinesis gestures, no hand-waving, no visible power source of any kind. No slow motion, no speed ramping on the Main Character, no cuts, no camera jumps, no teleportation, no duplicated or morphing people, no distorted limbs, no face changes, no outfit changes, no floating or weightless drift, no cartoon physics, no victory pose, no posing for camera, no text, no subtitles, no logos, no watermarks, no music, no blood, no gore.");
         lines.push("");
         lines.push("HIGHEST PRIORITY: The power must stay completely invisible. If anything glows, beams, radiates, or looks magical, the scene has failed. The only thing the audience ever sees is a calm man walking — and the whole world falling the wrong way around him.");
         return lines.join("\n");
@@ -1057,7 +1057,7 @@
         $("val-style").textContent = STYLES[state.style].name;
         $("val-power").textContent = POWERS[state.power].name;
         $("val-camera").textContent = CAMERAS[state.camera].name;
-        $("val-speed").textContent = state.speed + "x" + (state.speed === 1 ? " — natural" : state.speed === 2 ? " — fast" : " — KAI speed");
+        $("val-speed").textContent = state.speed + "x" + (state.speed === 1 ? " — natural" : state.speed === 2 ? " — fast" : " — extreme");
         $("val-take").textContent = state.take === "continuous" ? "One continuous take" : "Beat cuts";
         $("val-lock").textContent = state.lock === "ultra" ? "Ultra Lock" : "Locked";
         $("val-ending").textContent = state.ending === "open" ? "Open ending" : "Cut on impact";
@@ -1217,19 +1217,33 @@
         toast($("toast"), "Forged. Copy it into " + state.tool + ", or extend it below.");
       });
 
-      $("btn-kai").addEventListener("click", function () {
+      $("btn-main").addEventListener("click", function () {
         state.duration = 10;
         state.aspect = "16:9";
+        state.opponents = 10;
+        state.env = "street";
+        state.daynight = "Night";
+        state.weather = "Dry";
+        state.outfit = "regular";
+        state.style = "wingchun";
         state.power = "gravity";
+        state.camera = "handheld";
         state.speed = 3;
         state.take = "continuous";
         state.lock = "ultra";
         state.ending = "open";
+        state.addons.person = false;
+        state.addons.place = false;
+        state.addons.thing = false;
+        state.addons.vehicle = false;
+        state.addons.environment = true;
+        $("in-title").value = "";
+        $("in-note").value = "";
         refresh();
-        var text = kaiPrompt();
-        forged = { text: text, total: 10, extensions: 0, beatLen: 2, kind: "kai" };
-        setOutput(text, "KAI preset loaded — <b>10s</b> · " + state.tool + " · 16:9 · 3x speed · one take");
-        toast($("toast"), "KAI loaded. Copy it into " + state.tool + " with KAI's reference photo attached — or Extend to keep him walking.");
+        var text = mainCharacterPrompt();
+        forged = { text: text, total: 10, extensions: 0, beatLen: 2, kind: "gravity" };
+        setOutput(text, "Main Character preset loaded — <b>10s</b> · " + state.tool + " · 16:9 · 3x speed · one take");
+        toast($("toast"), "Main Character loaded. Copy it into " + state.tool + " with your reference photo as IMAGE 1 — or Extend to keep him walking.");
         if (window.innerWidth < 960) { $("out").scrollIntoView({ behavior: "smooth", block: "start" }); }
       });
 
@@ -1249,6 +1263,9 @@
         state.take = "continuous";
         state.lock = "ultra";
         state.ending = "impact";
+        state.addons.person = false;
+        state.addons.place = false;
+        state.addons.thing = false;
         state.addons.vehicle = true;
         state.addons.environment = true;
         $("in-title").value = "";
@@ -1276,11 +1293,11 @@
         block.push("");
         block.push("Seamless continuation from the exact final frame of the previous segment — same protagonist, same face, same outfit, same location, same lighting. No reset, no pause, no new introduction.");
         block.push("LOCK CARRIES OVER: the character lock, consistency rules, and negative prompt from the original prompt apply in full to this extension — same face, same outfit, same light, zero drift.");
-        block.push(forged.kind === "kai"
+        block.push(forged.kind === "gravity"
           ? "CAMERA CONTINUES: the same single backward-tracking follow, still one continuous take — the dominant move never changes."
           : "CAMERA CONTINUES: the dominant move stays " + CAMERAS[state.camera].name + " — do not switch camera language mid-story.");
         block.push("");
-        var beatSet = forged.kind === "kai" ? KAI_EXT_BEATS : EXT_BEATS;
+        var beatSet = forged.kind === "gravity" ? GRAVITY_EXT_BEATS : EXT_BEATS;
         for (var j = 0; j < addBeats; j++) {
           var s = startTotal + j * forged.beatLen, e = s + forged.beatLen;
           var beat = beatSet[(extIdx * addBeats + j) % beatSet.length](makeCtx(j % 5));
@@ -1292,7 +1309,7 @@
 
         var text = forged.text;
         text = text.replace(forged.total + " seconds", newTotal + " seconds");
-        if (extIdx === 0 && forged.kind === "kai") text = text.replace("DIRECTIONAL GRAVITY |", "DIRECTIONAL GRAVITY (EXTENDED) |");
+        if (extIdx === 0 && forged.kind === "gravity") text = text.replace("DIRECTIONAL GRAVITY", "DIRECTIONAL GRAVITY (EXTENDED)");
         else if (extIdx === 0) text = text.replace("| 1 VS ", "(EXTENDED) | 1 VS ");
         text = text + "\n" + block.join("\n").replace(/\n+$/, "") + "\n";
 
